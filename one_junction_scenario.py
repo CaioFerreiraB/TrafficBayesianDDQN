@@ -4,7 +4,7 @@ class OneJunctionScenario (NetFileScenario):
 
 	def specify_edge_starts(self):
 
-		edge_start = [('L3', 10), ('L5', 0)]
+		edge_start = [('L3', 40), ('L5', 0)]
 
 		return edge_start
 
