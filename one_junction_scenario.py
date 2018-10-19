@@ -1,15 +1,29 @@
 from flow.scenarios.netfile.scenario import NetFileScenario
 
 class OneJunctionScenario (NetFileScenario):
+	def gen_custom_start_pos(self, initial_config, num_vehicles, **kwargs):
+		"""Generate a user defined set of starting positions.
+		For this simulation, we just want the starting positions of the vehicles to be on the begin of the right and bottom edges
 
-	def specify_edge_starts(self):
+        Parameters
+        ----------
+        initial_config : InitialConfig type
+            see flow/core/params.py
+        num_vehicles : int
+            number of vehicles to be placed on the network
+        kwargs : dict
+            extra components, usually defined during reset to overwrite initial
+            config parameters
 
-		edge_start = [('L3', 0), ('L5', 80)]
+        Returns
+        -------
+        startpositions : list of tuple (float, float)
+            list of start positions [(edge0, pos0), (edge1, pos1), ...]
+        startlanes : list of int
+            list of start lanes
+        """
+		startpositions = [('bottom', 0), ('right', 0)]
+		startlanes = [0, 0]
 
-		return edge_start
+		return startpositions, startlanes
 
-	def specify_intersection_edge_starts(self):
-		"""See parent class."""
-		intersection_edgestarts = [("E0", 0)]
-
-		return intersection_edgestarts

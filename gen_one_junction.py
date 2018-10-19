@@ -6,8 +6,9 @@ class OneJunctionGenerator(NetFileGenerator):
 		"""Specify the routes used in the scenario"""
 
 		rts = {
-				'L3' : 'L3 L6',
-				'L5' : 'L5 L0'
+				'bottom' : 'bottom up',
+				'right' : 'right left',
+
 			  }
 
 		return rts

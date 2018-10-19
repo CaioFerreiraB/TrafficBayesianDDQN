@@ -1,6 +1,6 @@
 from flow.core.vehicles import Vehicles
 from flow.controllers.car_following_models import IDMController
-from flow.controllers.routing_controllers import ContinuousRouter
+from flow.controllers.routing_controllers import GridRouter
 from flow.core.params import SumoParams, EnvParams, InitialConfig, NetParams
 from flow.core.experiment import SumoExperiment
 
@@ -15,13 +15,15 @@ def main():
 	vehicles = Vehicles()
 	vehicles.add(veh_id="idm",
              acceleration_controller=(IDMController, {}), ########### STILL HAVE TO CREATE THE CONTROLLER ###########
-             routing_controller=(ContinuousRouter, {}),
+             routing_controller=(GridRouter, {}),
              num_vehicles=2)
 
 	#2. Initite the parameter for a sumo simulation and the initial configurations of the simulation
 	sumo_params = SumoParams(sim_step=0.1, render=True)
 
-	initial_config = InitialConfig(bunching=40)
+	edges_distribution = ['bottom', 'right'] #set the vehicles to just star on the bottom and right edges
+	initial_config = InitialConfig(edges_distribution=edges_distribution, spacing='custom')
+
 
 	#3. Set the environment parameter
 	env_params = EnvParams(additional_params=ADDITIONAL_ENV_PARAMS)
@@ -29,7 +31,7 @@ def main():
 	#4. Set the netfile parameters with the path to the .net.xml network file
 	net_params = NetParams(netfile='/mnt/c/Users/caiof/Desktop/IC-Lancaster/one_junction/sumo/one_junction.net.xml')
 
-	#5. Create a instance of the scenario and environment
+	#5. Create instances of the scenario and environment
 	scenario = OneJunctionScenario(  # we use the NetFileScenario scenario class for one junction scenario... 
 	    name="test_NetFile_scenario",
 	    generator_class=OneJunctionGenerator,  # ... as well as the newly netfile generator class
