@@ -11,7 +11,7 @@ from crash import OneJuntionCrashEnv, ADDITIONAL_ENV_PARAMS
 
 
 def main():
-	#1. Create a Vehicle obect containing the vehicles that will be in the simulation
+	#1. Create a Vehicle object containing the vehicles that will be in the simulation
 	vehicles = Vehicles()
 	vehicles.add(veh_id="idm",
              acceleration_controller=(IDMController, {}), ########### STILL HAVE TO CREATE THE CONTROLLER ###########
@@ -43,7 +43,7 @@ def main():
 	#6. create a instance of a sumo experiment
 	exp = SumoExperiment(env, scenario)
 
-	#. Run the sumo simulation for a set number of time steps
+	#7. Run the sumo simulation for a set number of time steps
 	exp.run(1, 1500)
 
 

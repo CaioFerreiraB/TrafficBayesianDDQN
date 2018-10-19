@@ -1,9 +1,12 @@
-
+from flow.core.params import SumoParams, EnvParams, InitialConfig, NetParams
+from flow.core.traffic_lights import TrafficLights
 from flow.envs import Env # Import the base environment class
+
 from gym.spaces.box import Box
 from skimage import io
-from skimage.viewer import ImageViewer
 
+import os
+import time
 
 
 ADDITIONAL_ENV_PARAMS = {
@@ -13,12 +16,12 @@ ADDITIONAL_ENV_PARAMS = {
 	"max_decel" : 2,
 }
 
-class crash(Env):
+class OneJuntionCrashEnv(Env):
 
-	def __init__(self, name, generator_class, vehicles, net_params, initial_config=InitialConfig(), traffic_lights=TrafficLights()):
+	def __init__(self, env_params, sumo_params, scenario):
 		self.arrived = 0
 
-		super().__init__(name, generator_class, vehicles, net_params, initial_config, traffic_lights)
+		super().__init__(env_params, sumo_params, scenario)
 
 
 
@@ -50,14 +53,20 @@ class crash(Env):
 		"""
 		Return a numpy ndarray containning an image of the simulation at the current step
 		"""
-		#1. Get the ID's of the views
+		#1. Get the ID's of the views using the TraCI connection to sumo
 		VIDs = self.traci_connection.gui.getIDList() 
+		print(VIDs)
+		if self.traci_connection is not None: print(self.traci_connection)
 
-		#2. Saving the screenshot for each view (usually its just one view). The we just save the screenshot of the current step
-		for i, ID in enumarate(VIDs):
-			self.traci_connection.gui.screenshot(ID, sc_name) #VERIFICAR SE ISSO FUNCIONA
+		print('----------------------------------')
+		#2. Saving the screenshot for each view (usually its just one view). We just save the screenshot of the current step
+		#for i, ID in enumerate(VIDs):
+		sc_name = os.getcwd() + "/screenshot5.png"
+		print("image saved on: ", sc_name)
+		self.traci_connection.gui.screenshot("View #0", sc_name) #VERIFICAR SE ISSO FUNCIONA
 
 		#3. Create a image object (numpy ndarray)
+		time.sleep(5) #Makes the program sleeps in order to give time to save the screenshot
 		screenshot = io.imread(sc_name)
 
 		return screenshot
@@ -68,12 +77,12 @@ class crash(Env):
 			+1 if a vehicle arrive at its destination
 			-1 if a colision happens
 
-		If none of the final states (the vehicle arrive at the destination or happen a colision) have being reached, 
+		If none of the final states (the vehicle arrive at the destination or happens a colision) have being reached, 
 		the state returns no reward.
 		"""
-		if self.traci_connection._simulation.getCollidingVehiclesNumber() > 0:
+		if self.traci_connection.simulation.getCollidingVehiclesIDList() > 0:
 			return -1
-		elif self.traci_connection._simulation.getArrivedNumber() > arrived:
+		elif self.traci_connection.simulation.getArrivedNumber() > arrived:
 			return +1
 		
 		return 0

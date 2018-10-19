@@ -8,7 +8,7 @@ vehicles = Vehicles()
 vehicles.add(veh_id="idm",
              acceleration_controller=(IDMController, {}),
              routing_controller=(ContinuousRouter, {}),
-             num_vehicles=22)
+             num_vehicles=2)
 
 sumo_params = SumoParams(sim_step=0.1, render=True)
 
