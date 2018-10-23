@@ -6,7 +6,7 @@ from flow.core.experiment import SumoExperiment
 
 from one_junction_scenario import OneJunctionScenario #scenario class
 from gen_one_junction import OneJunctionGenerator #generator class
-from crash import OneJuntionCrashEnv, ADDITIONAL_ENV_PARAMS
+from crash import OneJuntionCrashEnv, ADDITIONAL_ENV_PARAMS #environment
 
 
 
