@@ -29,8 +29,7 @@ class OneJuntionCrashEnv(Env):
 	def action_space(self):
 		return Box(low = -abs(self.env_params.additional_params["max_decel"]),
 				   high = self.env_params.additional_params["max_accel"],
-				   shape = (self.vehicles.num_rl_vehicles,),
-				   dtype=np.float32)
+				   shape = (self.vehicles.num_rl_vehicles,))
 
 	@property	
 	def observation_space(self):
@@ -67,9 +66,8 @@ class OneJuntionCrashEnv(Env):
 		self.traci_connection.gui.screenshot("View #0", sc_name) #VERIFICAR SE ISSO FUNCIONA
 
 		#3. Create a image object (numpy ndarray)
-		time.sleep(5) #Makes the program sleeps in order to give time to save the screenshot
+		time.sleep(1) #Makes the program sleeps in order to give time to save the screenshot
 		screenshot = io.imread(sc_name)
-		print(screenshot.shape)
 
 		return screenshot
 
@@ -82,9 +80,9 @@ class OneJuntionCrashEnv(Env):
 		If none of the final states (the vehicle arrive at the destination or happens a colision) have being reached, 
 		the state returns no reward.
 		"""
-		if self.traci_connection.simulation.getCollidingVehiclesNumber() > 0:
+		if self.traci_connection.simulation.getCollidingVehiclesIDList() > 0:
 			return -1
-		elif self.traci_connection.simulation.getArrivedNumber() > self.arrived:
+		elif self.traci_connection.simulation.getArrivedNumber() > arrived:
 			arrived += 1
 			return +1
 		
