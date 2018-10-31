@@ -3,10 +3,12 @@ from flow.controllers.car_following_models import IDMController
 from flow.controllers.routing_controllers import GridRouter
 from flow.core.params import SumoParams, EnvParams, InitialConfig, NetParams
 from flow.core.experiment import SumoExperiment
+from flow.controllers import RLController
 
 from one_junction_scenario import OneJunctionScenario #scenario class
 from gen_one_junction import OneJunctionGenerator #generator class
 from crash import OneJuntionCrashEnv, ADDITIONAL_ENV_PARAMS #environment
+from rl_run import Experiment
 
 
 
@@ -16,7 +18,11 @@ def main():
 	vehicles.add(veh_id="idm",
              acceleration_controller=(IDMController, {}), ########### STILL HAVE TO CREATE THE CONTROLLER ###########
              routing_controller=(GridRouter, {}),
-             num_vehicles=2)
+             num_vehicles=1)
+	vehicles.add(veh_id="rl",
+             acceleration_controller=(RLController, {}),
+             routing_controller=(GridRouter, {}),
+             num_vehicles=1)
 
 	#2. Initite the parameters for a sumo simulation and the initial configurations of the simulation
 	sumo_params = SumoParams(sim_step=0.1, render=True)
@@ -43,10 +49,10 @@ def main():
 	env = OneJuntionCrashEnv(env_params, sumo_params, scenario)
 
 	#6. create a instance of a sumo experiment
-	exp = SumoExperiment(env, scenario)
+	exp = Experiment(env, scenario)
 
-	#7. Run the sumo simulation for a set number of time steps
-	exp.run(1, 1500)
+	#7. Run the sumo simulation for a set number of runs and time steps per run
+	exp.run(20, 1000)
 
 
 if __name__ == "__main__":

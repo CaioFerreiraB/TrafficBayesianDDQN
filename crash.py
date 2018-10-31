@@ -6,6 +6,8 @@ from gym.spaces.box import Box
 from skimage import io
 from skimage.color import rgb2gray
 
+import numpy as np
+
 import os
 import time
 
@@ -21,12 +23,20 @@ class OneJuntionCrashEnv(Env):
 
 	def __init__(self, env_params, sumo_params, scenario):
 		self.arrived = 0
+		self.crashed = False
 		#open a gray initial image of the simulation and retrieve its shape
-		screenshot = io.imread(os.getcwd() + "/initial_screenshot_grey.png")
+		screenshot = io.imread(os.getcwd() + "/initial_screenshot.png")
 		io.imsave(os.getcwd() + "/screenshot.png", screenshot)
 		self.img_shape = screenshot.shape
 
 		super().__init__(env_params, sumo_params, scenario)
+
+	def reset_params(self):
+		self.arrived = 0
+		self.crashed = False
+
+	def getActionSet(self):
+		return [ADDITIONAL_ENV_PARAMS['max_accel'], ADDITIONAL_ENV_PARAMS['max_decel']]
 
 
 
@@ -49,7 +59,7 @@ class OneJuntionCrashEnv(Env):
 	# For this simulation, the only think that the agente can do is accelerate or decelerate in orther to avoid a crash
 	def _apply_rl_actions(self, rl_actions):
 		# the names of all autonomous (RL) vehicles in the network
-		rl_ids = self.vehicles.get_rl_ids
+		rl_ids = self.vehicles.get_rl_ids()
 
 		# use the base environment method to convert actions into accelerations for the rl vehicles
 		self.apply_acceleration(rl_ids, rl_actions)
@@ -70,11 +80,12 @@ class OneJuntionCrashEnv(Env):
 		#3. Create a image object (numpy ndarray)
 		#IMPORTANT: the screenshot is from the last step performed, not the one just taken!!!!
 		screenshot = io.imread(sc_name)
-		screenshot_grey = rgb2gray(screenshot)
+		#screenshot_grey = rgb2gray(screenshot)
 
-		return screenshot_grey
+		return screenshot
 
 	def compute_reward(self, state, rl_actions, **kwargs):
+		print('----- dentro do compute-----')
 		"""
 		Returns the reward of getting into a state. The possible rewards are:
 			+1 if a vehicle arrive at its destination
@@ -84,8 +95,9 @@ class OneJuntionCrashEnv(Env):
 		the state returns no reward.
 		"""
 		if self.traci_connection.simulation.getCollidingVehiclesNumber() > 0:
+			self.crashed = True
 			return -1
-		elif self.traci_connection.simulation.getArrivedNumber() > self.arrived:
+		elif self.traci_connection.simulation.getArrivedNumber() != 0:
 			self.arrived += 1
 			return +1
 		
