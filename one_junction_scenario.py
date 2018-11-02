@@ -22,8 +22,8 @@ class OneJunctionScenario (NetFileScenario):
         startlanes : list of int
             list of start lanes
         """
-		startpositions = [('bottom', 0), ('right', 0)]
-		startlanes = [0, 0]
+		startpositions = [('bottom', 30), ('bottom', 20), ('bottom', 10), ('bottom', 0), ('right', 10)]
+		startlanes = [0, 0, 0, 0, 0]
 
 		return startpositions, startlanes
 

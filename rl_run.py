@@ -82,6 +82,7 @@ class Experiment(SumoExperiment):
 				action = action_set[action[0]]
 				print('ACTION after:', action)
 				obs, reward, done, _ = self.env.step(action)
+				if action > 0 and reward == -0.001: reward = 0.001
 				obs = self.get_screen(obs, agent)
 				reward = torch.tensor([reward], device=agent.device)
 
@@ -102,11 +103,11 @@ class Experiment(SumoExperiment):
 
 				# Perform one step of the optimization (on the target network)
 				agent.optimize_model()
-				if done or (self.env.arrived ==2) or self.env.crashed:
+				if done or self.env.arrived or self.env.crashed:
 					agent.episode_durations.append(j + 1)
 					#plot_durations()
 					if self.env.crashed: print('Crash')
-					elif self.env.arrived ==2: 	print('all vehicles arrived the destination')
+					elif self.env.arrived: 	print('all vehicles arrived the destination')
 					break
 
 			# update target network

@@ -1,7 +1,8 @@
 from flow.core.vehicles import Vehicles
 from flow.controllers.car_following_models import IDMController
+from flow.controllers.car_following_models import SumoCarFollowingController
 from flow.controllers.routing_controllers import GridRouter
-from flow.core.params import SumoParams, EnvParams, InitialConfig, NetParams
+from flow.core.params import SumoParams, EnvParams, InitialConfig, NetParams, SumoCarFollowingParams
 from flow.core.experiment import SumoExperiment
 from flow.controllers import RLController
 
@@ -14,18 +15,25 @@ from rl_run import Experiment
 
 def main():
 	#1. Create a Vehicle object containing the vehicles that will be in the simulation
+	sumo_car_following_params = SumoCarFollowingParams(sigma=1, security=False, tau = 0.1)
 	vehicles = Vehicles()
 	vehicles.add(veh_id="idm",
-             acceleration_controller=(IDMController, {}), ########### STILL HAVE TO CREATE THE CONTROLLER ###########
+             acceleration_controller=(IDMController, {'T': 0.1, 's0': 0.1}), 
              routing_controller=(GridRouter, {}),
-             num_vehicles=1)
+             num_vehicles=4,
+             speed_mode=1100,
+             lane_change_mode='aggressive',
+             sumo_car_following_params=sumo_car_following_params)
 	vehicles.add(veh_id="rl",
              acceleration_controller=(RLController, {}),
              routing_controller=(GridRouter, {}),
-             num_vehicles=1)
+             num_vehicles=1,
+             speed_mode=0000,
+             lane_change_mode='aggressive',
+             sumo_car_following_params=sumo_car_following_params)
 
 	#2. Initite the parameters for a sumo simulation and the initial configurations of the simulation
-	sumo_params = SumoParams(sim_step=0.1, render=True)
+	sumo_params = SumoParams(sim_step=0.5, render=True)
 
 	edges_distribution = ['bottom', 'right'] #set the vehicles to just star on the bottom and right edges
 	initial_config = InitialConfig(edges_distribution=edges_distribution, spacing='custom')
