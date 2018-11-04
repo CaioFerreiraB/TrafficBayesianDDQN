@@ -24,12 +24,14 @@ import numpy as np
 import os
 import time
 
+from config import Config
+
 
 ADDITIONAL_ENV_PARAMS = {
 	#maximum acceleration of a rl vehicle
-	"max_accel" : 4,
+	"max_accel" : 3,
 	#maximum deceleration of a rl vechicle
-	"max_decel" : -1,
+	"max_decel" : -3,
 }
 
 RETRIES_ON_ERROR = 10
@@ -89,7 +91,7 @@ class OneJuntionCrashEnv(Env):
 		#2. Saving the screenshot for each view (usually its just one view). We just save the screenshot of the current step
 		#for i, ID in enumerate(VIDs):
 		sc_name = os.getcwd() + "/screenshot.png"
-		self.traci_connection.gui.screenshot("View #0", sc_name) #VERIFICAR SE ISSO FUNCIONA
+		self.traci_connection.gui.screenshot("View #0", sc_name) 
 
 		#3. Create a image object (numpy ndarray)
 		#IMPORTANT: the screenshot is from the last step performed, not the one just taken!!!!
@@ -110,17 +112,16 @@ class OneJuntionCrashEnv(Env):
 
 		arrived_ids = self.traci_connection.simulation.getArrivedIDList()
 
-		if len(self.traci_connection.simulation.getCollidingVehiclesIDList()) != 0: time.sleep(3)
-
 		if self.traci_connection.simulation.getCollidingVehiclesNumber() > 0:
 			self.crashed = True
-			return -1.0
+			return Config.COLLISION_REGRET
 		elif any(ID in self.rl_ids for ID in arrived_ids):
 			self.arrived = True
-			return +1.0
+			return Config.ARRIVE_REWARD
 		
-		return -0.01
+		return Config.TIME_PENALTI
 
+	#We have to override this function from flow in order to allow the simulation to check collisions in junctions
 	def start_sumo(self):
 		"""Start a sumo instance.
 

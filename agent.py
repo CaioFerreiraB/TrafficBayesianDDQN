@@ -17,6 +17,7 @@ import torchvision.transforms as T
 from model import DQN
 from config import Config
 from replay_memory import ReplayMemory
+from replay_memory import Transition
 
 class Agent:
 
@@ -37,12 +38,11 @@ class Agent:
         self.target_net.eval()
 
         self.optimizer = optim.RMSprop(self.policy_net.parameters())
-        self.memory = ReplayMemory(10000)
+        self.memory = ReplayMemory(2)
 
 
 
     def select_action(self, state):
-        print('     state.shape:', state.shape)
         global steps_done
         sample = random.random()
         eps_threshold = Config.EPS_END + (Config.EPS_START - Config.EPS_END) * \
@@ -50,21 +50,27 @@ class Agent:
         self.steps_done += 1
         if sample > eps_threshold:
             with torch.no_grad():
-                return self.policy_net(state).max(1)[1].view(1, 1) 
-                print(' - entrou na escolha pela rede neural')
+                return self.policy_net(state).max(1)[1].view(1, 1)
         else:
-            print(' - entrou na escolha aleatoria')
+            print('random action')
             return torch.tensor([[random.randrange(2)]], device=self.device, dtype=torch.long)
 
     def optimize_model(self):
+        print('---------------------------------------------------------------------------------------')
+        print('optimizing model')
         if len(self.memory) < Config.BATCH_SIZE:
             return
-        transitions = self.memory.sample(BATCH_SIZE)
-        # Transpose the batch (see http://stackoverflow.com/a/19343/3343043 for
-        # detailed explanation).
+        print('> sample transitions')
+        transitions = self.memory.sample(Config.BATCH_SIZE)
+        print('>> ok\n')
+
+        print('> batch transpose')
+        # Transpose the batch (see http://stackoverflow.com/a/19343/3343043 for detailed explanation).
         batch = Transition(*zip(*transitions))
+        print('>> ok\n')
 
         # Compute a mask of non-final states and concatenate the batch elements
+        print('> compute mas of non-final states and concatenate batch elements')
         non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
                                               batch.next_state)), device=self.device, dtype=torch.uint8)
         non_final_next_states = torch.cat([s for s in batch.next_state
@@ -72,25 +78,49 @@ class Agent:
         state_batch = torch.cat(batch.state)
         action_batch = torch.cat(batch.action)
         reward_batch = torch.cat(batch.reward)
+        print('>> ok\n')
 
+        print('> compute Q(s_t, a) with the policy network')
         # Compute Q(s_t, a) - the model computes Q(s_t), then we select the columns of actions taken
         state_action_values = self.policy_net(state_batch).gather(1, action_batch)
+        print('>> ok\n')
 
+        print('> Compute V(s_{t+1}) with the target network')
         # Compute V(s_{t+1}) for all next states.
-        next_state_values = torch.zeros(BATCH_SIZE, device=self.device)
-        next_state_values[non_final_mask] = self.target_net(non_final_next_states).max(1)[0].detach()
+        print('- toch.zeros')
+        next_state_values = torch.zeros(Config.BATCH_SIZE, device=self.device)
+        print('-- ok')
+        print('- target network')
+        aux = self.target_net(non_final_next_states)
+        print('-- ok')
+        print('- aux.max')
+        aux = aux.max(1)[0]
+        print('-- ok')
+        print('- aux.detach')
+        aux = aux.detach()
+        print('-- ok')
+        print('- next_state_values[non_final_mask]')
+        next_state_values[non_final_mask] = aux
+        print('>> ok\n')
+
+        print('> Compute the expected Q values')
         # Compute the expected Q values
         expected_state_action_values = (next_state_values * Config.GAMMA) + reward_batch
+        print('>> ok\n')
 
+        print('> Compute Huber loss')
         # Compute Huber loss
         loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
+        print('>> ok\n')
 
+        print('> perform backpropagation')
         # Optimize the model
         self.optimizer.zero_grad()
         loss.backward()
         for param in self.policy_net.parameters():
             param.grad.data.clamp_(-1, 1)
         self.optimizer.step()
+        print('>> ok\n')
 
 
     def plot_durations():
