@@ -4,7 +4,7 @@ class Config(object):
     EPS_START = 0.9
     EPS_END = 0.05
     EPS_DECAY = 200
-    TARGET_UPDATE = 5
+    TARGET_UPDATE = 10
 
     #Rewards/Regrets for the simulation
     COLLISION_REGRET = -1.0

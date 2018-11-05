@@ -38,7 +38,7 @@ class Agent:
         self.target_net.eval()
 
         self.optimizer = optim.RMSprop(self.policy_net.parameters())
-        self.memory = ReplayMemory(2)
+        self.memory = ReplayMemory(4)
 
 
 
@@ -70,7 +70,7 @@ class Agent:
         print('>> ok\n')
 
         # Compute a mask of non-final states and concatenate the batch elements
-        print('> compute mas of non-final states and concatenate batch elements')
+        print('> compute mask of non-final states and concatenate batch elements')
         non_final_mask = torch.tensor(tuple(map(lambda s: s is not None,
                                               batch.next_state)), device=self.device, dtype=torch.uint8)
         non_final_next_states = torch.cat([s for s in batch.next_state

@@ -92,7 +92,7 @@ class Experiment(SumoExperiment):
 				# Observe new state
 				last_screen = current_screen
 				current_screen = obs
-				if not done:
+				if not (self.env.arrived or self.env.crashed):
 					next_state = current_screen - last_screen
 				else:
 					next_state = None
