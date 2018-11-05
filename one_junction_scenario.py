@@ -1,4 +1,4 @@
-from flow.scenarios.netfile import NetFileScenario
+from flow.scenarios.netfile.scenario import NetFileScenario
 
 class OneJunctionScenario (NetFileScenario):
 	def gen_custom_start_pos(self, initial_config, num_vehicles, **kwargs):
