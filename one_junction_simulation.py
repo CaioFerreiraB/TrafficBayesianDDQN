@@ -14,6 +14,8 @@ from crash import OneJuntionCrashEnv, ADDITIONAL_ENV_PARAMS #environment
 from rl_run import Experiment
 from plots import plot
 
+import os
+
 
 
 def main():
@@ -57,7 +59,7 @@ def main():
 		env_params = EnvParams(additional_params=ADDITIONAL_ENV_PARAMS)
 
 		#4. Set the netfile parameters with the path to the .net.xml network file
-		net_params = NetParams(netfile='/mnt/c/Users/caiof/Desktop/IC-Lancaster/TrafficBayesianDDQN/sumo/one_junction.net.xml')
+		net_params = NetParams(netfile=os.getcwd() + '/sumo/one_junction.net.xml')
 
 		#5. Create instances of the scenario and environment
 		scenario = OneJunctionScenario(  # we use the NetFileScenario scenario class for one junction scenario... 
