@@ -38,7 +38,7 @@ class Agent:
         self.target_net.eval()
 
         self.optimizer = optim.RMSprop(self.policy_net.parameters())
-        self.memory = ReplayMemory(10000)
+        self.memory = ReplayMemory(1000)
 
 
 
@@ -50,7 +50,9 @@ class Agent:
         self.steps_done += 1
         if sample > eps_threshold:
             with torch.no_grad():
-                return self.policy_net(state).max(1)[1].view(1, 1)
+                a = self.policy_net(state)
+                print('Q-values: ', a)
+                return a.max(1)[1].view(1, 1)
         else:
             print('random action')
             return torch.tensor([[random.randrange(2)]], device=self.device, dtype=torch.long)
