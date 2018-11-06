@@ -38,7 +38,7 @@ class Agent:
         self.target_net.eval()
 
         self.optimizer = optim.RMSprop(self.policy_net.parameters())
-        self.memory = ReplayMemory(4)
+        self.memory = ReplayMemory(10000)
 
 
 
