@@ -162,6 +162,13 @@ class OneJuntionCrashEnv(Env):
 				sumo_call.append("--collision.action")
 				sumo_call.append("remove")
 
+				#start the simulation automatically
+				sumo_call.append("--start")
+
+				#close SUMO on the end of the simulation
+				sumo_call.append("--quit-on-end")
+
+
 				# add step logs (if requested)
 				if self.sumo_params.no_step_log:
 					sumo_call.append("--no-step-log")

@@ -20,7 +20,7 @@ import os
 
 def main():
 	experiments = 1
-	runs = 300
+	runs = 1000
 	steps_per_run = 500
 
 	performance = np.zeros(runs)
