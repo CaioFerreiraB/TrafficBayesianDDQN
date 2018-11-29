@@ -105,7 +105,7 @@ class SaveLogs:
 
 		file.close()
 
-	def save_reward(self, data, logs_path, experiment_label, experiment, current_run):
+	def save_reward(self, data, experiment, current_run):
 		reward_log = open(self.rewards_path + '/experiment' + str(experiment) + '.txt', 'a+')
 
 		for i in range(current_run - self.last_checkpoint_reward):

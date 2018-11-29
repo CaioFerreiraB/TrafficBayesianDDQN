@@ -41,7 +41,7 @@ class OneJuntionCrashEnv(Env):
 	def __init__(self, env_params, sumo_params, scenario):
 		self.arrived = False
 		self.crashed = False
-		#open a gray initial image of the simulation and retrieve its shape
+		#open a initial image of the simulation and retrieve its shape
 		screenshot = io.imread(os.getcwd() + "/initial_screenshot.png")
 		io.imsave(os.getcwd() + "/screenshot.png", screenshot)
 		self.img_shape = screenshot.shape

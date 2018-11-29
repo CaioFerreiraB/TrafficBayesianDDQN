@@ -24,10 +24,6 @@ def parse_args():
 						default='./logs/model/', type=str)
 	parser.add_argument('-rl', '--rewards_logs_path', dest='rewards_logs_path', help='path of the reward checkpoint folder',
 						default='./logs/rewards/', type=str)
-	parser.add_argument('-v', '--video_path', dest='video_path', help='path of the video folder',
-						default='./rl/video', type=str)
-	parser.add_argument('-r', '--restore', dest='restore', help='restore checkpoint',
-						default=None, type=str)
 	parser.add_argument('-la', '--label', dest='label', help='experiment label',
 						default='experiment', type=str)
 	parser.add_argument('-lp', '--load_path', dest='load_path', help='path to the model to be loaded',
@@ -40,25 +36,26 @@ def parse_args():
 def main():
 	model_logs_path = args.model_logs_path
 	rewards_logs_path = args.rewards_logs_path
-	video_path = args.video_path
-	restore = args.restore
 	label = args.label
 	load_path = args.load_path
 	train = True
 
 	experiments = 2
-	runs = 5000
+	runs = 30000
 	steps_per_run = 250
 
+	#1. Set the logs object, creating the logs paths, if it does not exists yet, and the experiments logs path
 	save_logs = SaveLogs(label, experiments, runs, steps_per_run)
 
 	save_logs.create_logs_path()
 	save_logs.create_experiments_logs_path()
 
+	#2. Iniciate the variables used to store informations from the simulation
 	performance = np.zeros(runs)
 	collisions = np.zeros(runs)
 	rewards = np.zeros(runs)
 
+	#3. Run a set number of experiments
 	for i in range (experiments):
 		#1. Create a Vehicle object containing the vehicles that will be in the simulation
 			# The tau parameter must be lower than the simulation step in order to allow collisions
@@ -109,25 +106,23 @@ def main():
 		exp = Experiment(env, scenario)
 
 		#7. Run the sumo simulation for a set number of runs and time steps per run
-		info = exp.run(runs, steps_per_run, run=i, model_logs_path=model_logs_path,
-		 				rewards_logs_path=rewards_logs_path, saveLogs=save_logs, train=train,
-		 				experiment_label=label, load_path=load_path)
+		info = exp.run(runs, steps_per_run, run=i, saveLogs=save_logs, train=train,load_path=load_path)
+		
 		performance = performance + info['performance']
 		collisions = collisions + info['collisions']
 		rewards = rewards + info['returns']
 
 		save_logs.save_graph(label, 'exp' + str(i), performance, collisions, rewards)
 
+	#4. Average the total performance of the experiments
 	performance = performance/experiments
 	collisions = collisions/experiments
 	rewards = rewards/experiments
-	print('final:')
-	print('performance:\n', performance)
-	print('collisions:\n', collisions)
-	print('rewards:\n', rewards)
 
+	#5. Store all the statitics of the simulation
 	save_logs.save_config_and_statistics()
 
+	#6. Save the graphs produced
 	save_logs.save_graph(label, 'final', performance, collisions, rewards)
 	
 

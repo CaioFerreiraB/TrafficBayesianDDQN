@@ -2,36 +2,44 @@ import logging
 import datetime
 import numpy as np
 
+#flow libraries
 from flow.core.util import emission_to_csv
 from flow.core.experiment import SumoExperiment
 
+#Image libraries
 from PIL import Image
 
+#Pytorch libraries
 import torch
 import torchvision.transforms as T
 import torchvision.transforms.functional as F
 
+#project libraries
 from config import Config
 from replay_memory import ReplayMemory
 from agent import Agent
 from save_logs import SaveLogs
 
+#system libraries
 import os
 import time
 
+#Method to resize the image, used on "get_image"
 resize = T.Compose([T.ToPILImage(),
 					T.Resize(40, interpolation=Image.CUBIC),
 					T.ToTensor()])
-#gray_scale = T.Compose([T.ToPILImage(),
-#						F.to_grayscale( num_output_channels=1)])
 
 class Experiment(SumoExperiment):
+	"""
+	Class responsable to run the entire experiment. 
+	"""
 
 	def __init__(self, env, scenario):
 		super().__init__(env, scenario)
 
 	#We have to override the run method from flow in order to use pytorch as our reinforcement learning library
-	def run(self, num_runs, num_steps, train, run, model_logs_path, rewards_logs_path, saveLogs, experiment_label='experiment', rl_actions=None, convert_to_csv=False, load_path=None):
+	def run(self, num_runs, num_steps, train, run, saveLogs,
+			rl_actions=None, convert_to_csv=False, load_path=None):
 		"""
         Run the given scenario for a set number of runs and steps per run.
 
@@ -41,12 +49,21 @@ class Experiment(SumoExperiment):
                 number of runs the experiment should perform
             num_steps: int
                 number of steps to be performs in each run of the experiment
+            train: bool
+            	Define if it is a trainning or evaluating experiment
+            run: int
+            	The number of the current experiment
+            saveLogs: SaveLogs object
+            	The instance of the package used to save the logs of the simulation
             rl_actions: method, optional
                 maps states to actions to be performed by the RL agents (if
                 there are any)
             convert_to_csv: bool
                 Specifies whether to convert the emission file created by sumo
                 into a csv file
+            load_path: string
+            	Path to the model that should be loaded into the neural network
+            	Default: None
         Returns
         -------
             info_dict: dict
@@ -55,7 +72,7 @@ class Experiment(SumoExperiment):
 			def rl_actions(*_):
 				return None
 		"""
-
+		#1. Initialize the information variables
 		info_dict = {}
 		rets = []
 		mean_rets = []
@@ -67,14 +84,19 @@ class Experiment(SumoExperiment):
 		performance = []
 		collisions = []
 
-		#Set the reinforcement learning parameters
+		#2. Set the reinforcement learning parameters
 		action_set = self.env.getActionSet()
 		agent = Agent(action_set, train=True, load_path=load_path)
-		got_it = 0
-		got_it_persist = 0
-		best_time = 1000
+		target_update_counter = 0
 
+		#3. Initialize the variables that decide when to store the best network
+		got_it = 0 # How many times the agent reaches the end of the street
+		got_it_persist = 0 # The best sequence of reaching the end of the street
+		best_time = 1000 # The lowest time that the agent spent to reach the end of the street
+
+		#4. Run the experiment for a set number of simulations(runs)
 		for i in range(num_runs):
+			#1. initialize the environment
 			vel = np.zeros(num_steps)
 			logging.info("Iter #" + str(i))
 			ret = 0
@@ -82,27 +104,24 @@ class Experiment(SumoExperiment):
 			vehicles = self.env.vehicles
 			collision_check = 0
 
-			#obs = self.get_screen(self.env.reset(), agent)
-			obs = self.get_screen(self.env.reset(), agent)
+			obs = self.get_screen(self.env.reset())
 			self.env.reset_params()
-			#obs_tensor = torch.from_numpy(obs).to(agent.device)
-			#state = torch.stack((obs, obs, obs, obs), dim=0)
 			state = np.stack([obs for _ in range(4)], axis=0)
-			#print('state.shape depois do stack', state.shape)
 
+			#2. Perform one simulation
 			for j in range(num_steps):
 				print('(episode, step) = ', i, ',', j)
 				
-				# Select and perform an action(the method rl_action is responsable to select the action to be taken)
+				#1. Select and perform an action(the method rl_action is responsable to select the action to be taken)
 				action, Q_value = agent.select_action(self.concatenate(state, agent), train)
 				if Q_value is not None: saveLogs.save_Q_value(Q_value, run)
 				obs, reward, done, _ = self.env.step(action_set[action[0]])
 
-				# Convert the observation to a pytorch observation
-				obs = self.get_screen(obs, agent)
+				#2. Convert the observation to a pytorch observation
+				obs = self.get_screen(obs)
 				reward = torch.tensor([reward], device=agent.device)
 
-				# Observe new state
+				#3. Observe new state
 				if not (self.env.arrived or self.env.crashed):
 					next_state = []
 					next_state.append(obs)
@@ -112,23 +131,31 @@ class Experiment(SumoExperiment):
 				else:
 					next_state = None
 
-				# Store the transition in memory
+				#4. Store the transition in memory
 				agent.memory.push(self.concatenate(state, agent), action, self.concatenate(next_state, agent), reward)
 
-				#Move to the next state
+				#5. Move to the next state
 				state = next_state
 
-				# Flow code
+				#6. Flow code
 				vel[j] = np.mean(vehicles.get_speed(vehicles.get_ids()))
 				ret += reward
 				ret_list.append(reward)
 
-				# Perform one step of the optimization (on the target network) if in training mode
+				#7. Perform one step of the optimization (on the target network) if in training mode
 				if train: agent.optimize_model()
 
+				#8. update target network
+				if target_update_counter % Config.TARGET_UPDATE == 0:
+					target_update_counter = 0
+					agent.target_net.load_state_dict(agent.policy_net.state_dict())
+					print('update target network ok...')
+
+				target_update_counter += 1
+
+				#9. Decide if the simulation gets to an end
 				if done or self.env.arrived or self.env.crashed:
 					agent.episode_durations.append(j + 1)
-					#plot_durations()
 					if self.env.crashed:
 						saveLogs.add_crash()
 						print('Crash')
@@ -140,13 +167,7 @@ class Experiment(SumoExperiment):
 						print('all vehicles arrived the destination')
 					break
 
-				
-
-			# update target network
-			if i % Config.TARGET_UPDATE == 0:
-				agent.target_net.load_state_dict(agent.policy_net.state_dict())
-				print('update target network ok...')
-
+			#3. Decide if the current model of the neural network will be stored
 			if not self.env.arrived and not self.env.crashed:
 					got_it = 0
 			print(got_it)
@@ -158,14 +179,12 @@ class Experiment(SumoExperiment):
 				saveLogs.save_model(agent.policy_net, agent.optimizer, 10101010)
 				print(got_it)
 
-
+			#4. Store information from the simulation
 			saveLogs.add_simulation_time(time=j)
-
-
 			performance.append(j)
 			collisions.append(1 if self.env.crashed else 0)
 
-			#flow code
+			#5. flow code
 			rets.append(ret)
 			vels.append(vel)
 			mean_rets.append(np.mean(ret_list))
@@ -173,22 +192,18 @@ class Experiment(SumoExperiment):
 			mean_vels.append(np.mean(vel))
 			std_vels.append(np.std(vel))
 			
-			# save rewards
+			#6. save rewards
 			#if i % Config.SAVE_REWARDS_FREQUENCE == 0:
-			saveLogs.save_reward(rets, rewards_logs_path, experiment_label, run, i)
+			saveLogs.save_reward(rets, run, i)
 			saveLogs.save_average_reward(ret)
 			saveLogs.save_collision(collision_check, run)
 			saveLogs.save_time(j, run)
 
-			print("Round {0}, return: {1}".format(i, ret))
-			print('------------i:', i)
-
-
-			print('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>')
-
+		#5. Store the logs of the simulation
+		#a. save the final model of the neural network
 		saveLogs.save_model(agent.policy_net, agent.optimizer, run)
-		#agent.save(step=run, logs_path=model_logs_path, label=experiment_label)
 
+		#b. store the data statistics of the simulation
 		info_dict["returns"] = np.array(rets.copy())
 		info_dict["velocities"] = vels
 		info_dict["mean_returns"] = mean_rets
@@ -202,7 +217,6 @@ class Experiment(SumoExperiment):
 			np.mean(mean_vels), np.std(std_vels)))
 		self.env.terminate()
 
-		#print(agent.policy_net.state_dict())
 
 		if convert_to_csv:
 			# collect the location of the emission file
@@ -217,7 +231,20 @@ class Experiment(SumoExperiment):
 
 		return info_dict
 
-	def get_screen(self, screen_image, agent):
+	def get_screen(self, screen_image):
+		"""
+        Format the image observed of the simulation, resizing and setting pytorch dimensions
+
+        Parameters
+        ----------
+            screen_image: float ndarray
+            	the image retrieved from the simulation
+        Returns
+        -------
+            screen: float ndarray
+            	the image resize and transposed
+		"""
+
 		screen = screen_image.transpose((2, 1, 0))
 		screen = T.ToPILImage()(screen)
 		#screen = F.to_grayscale(screen, num_output_channels=1)
@@ -228,6 +255,20 @@ class Experiment(SumoExperiment):
 		return screen
 	
 	def concatenate(self, data, agent):
+		"""
+        Concatenate 4 consecutive frames of the simulation
+
+        Parameters
+        ----------
+            data: float ndarray
+            	The frames that will be concatenated
+            agent: Agent object
+            	The instance of the agent of the simulation. Used to selec the device
+        Returns
+        -------
+            data_append: float ndarray
+            	The result of the concatenation
+		"""
 		if data is not None:
 			data_append = np.append(data[0], data[1], axis=1)
 			data_append = np.append(data_append, data[2], axis=1)
