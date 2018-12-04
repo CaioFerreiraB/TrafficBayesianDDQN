@@ -14,6 +14,8 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torchvision.transforms as T
 
+import time
+
 class DQN(nn.Module):
 
     def __init__(self):
@@ -40,6 +42,9 @@ class DQN(nn.Module):
         }, path)
             
     def load(self, checkpoint_path, optimizer=None):
+        print('LOAD PATH    --  model.load:', checkpoint_path)
+        time.sleep(2)
+
         checkpoint = torch.load(checkpoint_path)
         step = checkpoint['step']
         self.load_state_dict(checkpoint['state_dict'])

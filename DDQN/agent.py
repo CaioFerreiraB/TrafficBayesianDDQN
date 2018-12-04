@@ -18,6 +18,7 @@ import torchvision.transforms as T
 # System libraries
 import glob
 import os
+import time
 
 # Project libraries
 from model import DQN
@@ -31,7 +32,7 @@ class Agent:
     It is responsible to select the actions, optimize the neural network and manage the models.
     """
 
-    def __init__(self, action_set, train=False, load_path=None):
+    def __init__(self, action_set, train=True, load_path=None):
         #1. Initialize agent params
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.action_set = action_set
@@ -40,17 +41,27 @@ class Agent:
         self.epsilon = Config.EPS_START
         self.episode_durations = []
 
+        print('LOAD PATH    --  agent.init:', load_path)
+        time.sleep(2)
 
         #2. Build networks
         self.policy_net = DQN().to(self.device)
         self.target_net = DQN().to(self.device)
-        if not train: self.policy_net.load(load_path)
+        
+        self.optimizer = optim.RMSprop(self.policy_net.parameters(), lr=Config.LEARNING_RATE)
+
+        if not train:
+            print('entrou no not train')        
+            self.optimizer = optim.RMSprop(self.policy_net.parameters(), lr=0)    
+            self.policy_net.load(load_path, optimizer=self.optimizer)
+            self.policy_net.eval()
+
         self.target_net.load_state_dict(self.policy_net.state_dict())
         self.target_net.eval()
 
-        self.optimizer = optim.RMSprop(self.policy_net.parameters())
         self.memory = ReplayMemory(1000)
 
+        
 
 
     def select_action(self, state, train=True):

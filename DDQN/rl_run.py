@@ -23,6 +23,7 @@ from save_logs import SaveLogs
 #system libraries
 import os
 import time
+from copy import deepcopy
 
 #Method to resize the image, used on "get_image"
 resize = T.Compose([T.ToPILImage(),
@@ -86,13 +87,15 @@ class Experiment(SumoExperiment):
 
 		#2. Set the reinforcement learning parameters
 		action_set = self.env.getActionSet()
-		agent = Agent(action_set, train=True, load_path=load_path)
+		print('LOAD PATH 	--	run:', load_path)
+		time.sleep(2)
+		agent = Agent(action_set, train=train, load_path=load_path)
 		target_update_counter = 0
 
 		#3. Initialize the variables that decide when to store the best network
 		got_it = 0 # How many times the agent reaches the end of the street
-		got_it_persist = 0 # The best sequence of reaching the end of the street
-		best_time = 1000 # The lowest time that the agent spent to reach the end of the street
+		max_ret = -200
+		evaluate_counter = Config.EVALUATE_AMMOUNT
 
 		#4. Run the experiment for a set number of simulations(runs)
 		for i in range(num_runs):
@@ -102,7 +105,7 @@ class Experiment(SumoExperiment):
 			ret = 0
 			ret_list = []
 			vehicles = self.env.vehicles
-			collision_check = 0
+			collision_check = 5
 
 			obs = self.get_screen(self.env.reset())
 			self.env.reset_params()
@@ -113,6 +116,11 @@ class Experiment(SumoExperiment):
 				print('(episode, step) = ', i, ',', j)
 				
 				#1. Select and perform an action(the method rl_action is responsable to select the action to be taken)
+				if evaluate_counter == Config.EVALUATE_AMMOUNT:
+					print('------------ EH IGUAL')
+					agent.policy_net.train()
+					train = True
+
 				action, Q_value = agent.select_action(self.concatenate(state, agent), train)
 				if Q_value is not None: saveLogs.save_Q_value(Q_value, run)
 				obs, reward, done, _ = self.env.step(action_set[action[0]])
@@ -125,9 +133,9 @@ class Experiment(SumoExperiment):
 				if not (self.env.arrived or self.env.crashed):
 					next_state = []
 					next_state.append(obs)
-					next_state.append(state[0].copy())
-					next_state.append(state[1].copy())
-					next_state.append(state[2].copy())
+					next_state.append(deepcopy(state[0]))
+					next_state.append(deepcopy(state[1]))
+					next_state.append(deepcopy(state[2]))
 				else:
 					next_state = None
 
@@ -143,7 +151,13 @@ class Experiment(SumoExperiment):
 				ret_list.append(reward)
 
 				#7. Perform one step of the optimization (on the target network) if in training mode
-				if train: agent.optimize_model()
+				if train and evaluate_counter == Config.EVALUATE_AMMOUNT:
+					print('-----ENTROU NA OTIMIZACAO')
+					agent.optimize_model()
+					agent.policy_net.eval()
+					train = False
+					target_update_counter += 1
+				
 
 				#8. update target network
 				if target_update_counter % Config.TARGET_UPDATE == 0:
@@ -151,7 +165,6 @@ class Experiment(SumoExperiment):
 					agent.target_net.load_state_dict(agent.policy_net.state_dict())
 					print('update target network ok...')
 
-				target_update_counter += 1
 
 				#9. Decide if the simulation gets to an end
 				if done or self.env.arrived or self.env.crashed:
@@ -160,24 +173,34 @@ class Experiment(SumoExperiment):
 						saveLogs.add_crash()
 						print('Crash')
 						collision_check = 1
-						got_it = 0
 					elif self.env.arrived:
 						saveLogs.add_arrive()
-						got_it += 1
 						print('all vehicles arrived the destination')
 					break
 
 			#3. Decide if the current model of the neural network will be stored
-			if not self.env.arrived and not self.env.crashed:
-					got_it = 0
-			print(got_it)
+			if self.env.arrived:
+				got_it += 1
+			else:
+				got_it = 0
+
+			print('got_it:', got_it)
+
+			if  evaluate_counter == Config.EVALUATE_AMMOUNT:
+				print('--------EVALUATE A: ', evaluate_counter)
+				evaluate_counter = 0
+				got_it = 0
+			else:
+				print('--------EVALUATE B: ', evaluate_counter)
+				evaluate_counter += 1
 
 
-			if got_it > 10 and got_it > got_it_persist and j < best_time:
-				got_it_persist = got_it
-				best_time = j
-				saveLogs.save_model(agent.policy_net, agent.optimizer, 10101010)
-				print(got_it)
+			if evaluate_counter == Config.EVALUATE_AMMOUNT and got_it == Config.EVALUATE_AMMOUNT and ret > max_ret:
+				print('------ENTROU PRA SALVAR')
+				max_ret = ret
+				saveLogs.save_model(agent.policy_net, agent.optimizer, 10101010, i*j)
+				print('got:', got_it)
+
 
 			#4. Store information from the simulation
 			saveLogs.add_simulation_time(time=j)
@@ -193,7 +216,7 @@ class Experiment(SumoExperiment):
 			std_vels.append(np.std(vel))
 			
 			#6. save rewards
-			#if i % Config.SAVE_REWARDS_FREQUENCE == 0:
+			#if i % Config.SAVE_REWARDS_FREQUENCy == 0:
 			saveLogs.save_reward(rets, run, i)
 			saveLogs.save_average_reward(ret)
 			saveLogs.save_collision(collision_check, run)

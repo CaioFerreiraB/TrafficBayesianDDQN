@@ -17,6 +17,7 @@ from save_logs import SaveLogs
 
 import os
 import argparse
+import time
 
 def parse_args():
 	parser = argparse.ArgumentParser()
@@ -38,6 +39,8 @@ def main():
 	rewards_logs_path = args.rewards_logs_path
 	label = args.label
 	load_path = args.load_path
+	print('LOAD PATH 	--	main:', load_path)
+	time.sleep(2)
 	train = True
 
 	experiments = 2
@@ -106,7 +109,7 @@ def main():
 		exp = Experiment(env, scenario)
 
 		#7. Run the sumo simulation for a set number of runs and time steps per run
-		info = exp.run(runs, steps_per_run, run=i, saveLogs=save_logs, train=train,load_path=load_path)
+		info = exp.run(runs, steps_per_run, run=i, saveLogs=save_logs, train=train, load_path=load_path)
 		
 		performance = performance + info['performance']
 		collisions = collisions + info['collisions']

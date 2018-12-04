@@ -2,6 +2,7 @@ class Config(object):
     #Network parameters
     BATCH_SIZE = 64
     GAMMA = 0.99 #Discount factor
+    LEARNING_RATE = 0.01
     EPS_START = 0.9
     EPS_END = 0.05
     EPS_DECAY = 200
@@ -13,5 +14,6 @@ class Config(object):
     TIME_PENALTY = -0.001
 
     #logs parameters
-    SAVE_REWARDS_FREQUENCE = 1
+    SAVE_REWARDS_FREQUENCY = 1
     AVERAGE_REWARD_FREQUENCE = 50
+    EVALUATE_AMMOUNT = 5

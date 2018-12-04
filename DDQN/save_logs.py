@@ -114,10 +114,10 @@ class SaveLogs:
 		self.last_checkpoint_reward = current_run
 		reward_log.close()
 
-	def save_model(self, policy_net, optimizer, experiment):
+	def save_model(self, policy_net, optimizer, experiment, step):
 		path = self.model_path + '/' + self.experiment_label + str(experiment) + '.pth'
 
-		policy_net.save(path, step=experiment, optimizer=optimizer)
+		policy_net.save(path, step=step, optimizer=optimizer)
 
 	def save_graph(self, experiment_label, label, performance, collisions, rewards):
 		plot.plot_one_axis(self.graphs_path + '/', performance, 'simulation time', experiment_label, label)

@@ -23,6 +23,7 @@ import numpy as np
 
 import os
 import time
+from copy import deepcopy
 
 from config import Config
 
@@ -46,7 +47,7 @@ class OneJuntionCrashEnv(Env):
 		io.imsave(os.getcwd() + "/screenshot.png", screenshot)
 		self.img_shape = screenshot.shape
 		print('shape', self.img_shape)
-		self.rl_ids = scenario.vehicles.get_rl_ids().copy()
+		self.rl_ids = deepcopy(scenario.vehicles.get_rl_ids())
 
 		super().__init__(env_params, sumo_params, scenario)
 
