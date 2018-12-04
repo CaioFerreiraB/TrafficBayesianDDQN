@@ -41,7 +41,7 @@ def main():
 	load_path = args.load_path
 	print('LOAD PATH 	--	main:', load_path)
 	time.sleep(2)
-	train = True
+	train = False
 
 	experiments = 2
 	runs = 30000
@@ -109,7 +109,10 @@ def main():
 		exp = Experiment(env, scenario)
 
 		#7. Run the sumo simulation for a set number of runs and time steps per run
-		info = exp.run(runs, steps_per_run, run=i, saveLogs=save_logs, train=train, load_path=load_path)
+		if train:
+			info = exp.run_train(runs, steps_per_run, run=i, saveLogs=save_logs, train=True, load_path=load_path)
+		else:
+			info = exp.run_eval(runs, steps_per_run, run=i, saveLogs=save_logs, train=False, load_path=load_path)
 		
 		performance = performance + info['performance']
 		collisions = collisions + info['collisions']
