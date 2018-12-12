@@ -1,0 +1,28 @@
+experiment: DDQN_0.99_-100_50_-0.001_30_1000
+
+#Network parameters
+BATH_SIZE = 64
+GAMMA = 0.99
+EPS_START = 0.9
+EPS_END = 0.05
+EPS_DECAY = 200
+TARGET_UPDATE_FREQ = 30
+
+#Rewards/Regrets
+COLLISION_REGRET = -100.0
+ARRIVE_REWARD = 50.0
+TIME_PENALTY = -0.001
+
+#Experiment parameters
+Number of experiments: 3
+Number of runs per experiment: 1000
+Total number of simulations: 3000
+
+#statistics
+Total number of collisions: 1259
+Average collisions per run: 419.6666666666667
+Total number of arrives: 1585
+Average arrives per run: 528.3333333333334
+Total number of vehicles stopped: 156
+Average stopped vehicles per run: 52.0
+Average simulation time: 77.872
