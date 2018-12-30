@@ -1,0 +1,28 @@
+experiment: bayesian1
+
+#Network parameters
+BATH_SIZE = 64
+GAMMA = 0.99
+EPS_START = 0.9
+EPS_END = 0.05
+EPS_DECAY = 200
+TARGET_UPDATE_FREQ = 10000
+
+#Rewards/Regrets
+COLLISION_REGRET = -100.0
+ARRIVE_REWARD = 50.0
+TIME_PENALTY = -0.001
+
+#Experiment parameters
+Number of experiments: 2
+Number of runs per experiment: 5000
+Total number of simulations: 10000
+
+#statistics
+Total number of collisions: 11688
+Average collisions per run: 5844.0
+Total number of arrives: 10314
+Average arrives per run: 5157.0
+Total number of vehicles stopped: -12002
+Average stopped vehicles per run: -6001.0
+Average simulation time: 112.1194
