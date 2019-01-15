@@ -49,7 +49,6 @@ class DQN(nn.Module):
             
     def load(self, checkpoint_path, optimizer=None):
         print('LOAD PATH    --  model.load:', checkpoint_path)
-        time.sleep(2)
 
         checkpoint = torch.load(checkpoint_path)
         step = checkpoint['step']

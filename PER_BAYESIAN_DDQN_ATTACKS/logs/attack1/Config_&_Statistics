@@ -1,0 +1,28 @@
+experiment: attack1
+
+#Network parameters
+BATH_SIZE = 64
+GAMMA = 0.99
+EPS_START = 0.9
+EPS_END = 0.05
+EPS_DECAY = 200
+TARGET_UPDATE_FREQ = 10000
+
+#Rewards/Regrets
+COLLISION_REGRET = -100.0
+ARRIVE_REWARD = 50.0
+TIME_PENALTY = -0.001
+
+#Experiment parameters
+Number of experiments: 2
+Number of runs per experiment: 5000
+Total number of simulations: 10000
+
+#statistics
+Total number of collisions: 9996
+Average collisions per run: 4998.0
+Total number of arrives: 0
+Average arrives per run: 0.0
+Total number of vehicles stopped: 4
+Average stopped vehicles per run: 2.0
+Average simulation time: 17.0923

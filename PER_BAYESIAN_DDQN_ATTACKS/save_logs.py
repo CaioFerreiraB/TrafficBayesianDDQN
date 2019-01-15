@@ -30,6 +30,7 @@ class SaveLogs:
 		self.model_path = self.logs_path + self.experiment_label + '/model'
 		self.graphs_path = self.logs_path + self.experiment_label + '/graphs'
 		self.screnshot_path = self.logs_path + self.experiment_label + '/screenshot'
+		self.uncertainty_path = self.logs_path + self.experiment_label + '/uncertainty'
 
 		#checkpoints
 		self.last_checkpoint_reward = 0
@@ -73,6 +74,7 @@ class SaveLogs:
 		os.makedirs(self.collisions_path, exist_ok=True)
 		os.makedirs(self.time_path, exist_ok=True)
 		os.makedirs(self.screnshot_path, exist_ok=True)
+		os.makedirs(self.uncertainty_path, exist_ok=True)
 
 	def save_config_and_statistics(self):
 		file = open(self.experiment_logs_path + '/Config_&_Statistics', 'a+')
@@ -175,3 +177,10 @@ class SaveLogs:
 		print('entrou no screenshot')
 		#io.imsave(self.screnshot_path + '/' + str(epsilon) + '_' + str(iteration) + '.png', img)
 		io.imsave(os.getcwd() + "/attack.png", img)
+
+	def save_uncertainty(self, uncertainty, experiment):
+		reward_log = open(self.uncertainty_path + '/experiment' + str(experiment) + '.txt', 'a+')
+
+		reward_log.write(str(uncertainty) + '\n')
+
+		reward_log.close()

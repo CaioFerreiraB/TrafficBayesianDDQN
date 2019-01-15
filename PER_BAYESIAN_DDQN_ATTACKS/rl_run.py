@@ -23,6 +23,7 @@ from replay_memory import ReplayMemory
 from agent import Agent
 from save_logs import SaveLogs
 from adversary import *
+from detection import *
 
 #system libraries
 import os
@@ -535,6 +536,11 @@ class Experiment(SumoExperiment):
 				if attack:
 					state_conc = fgsm_attack(state_conc, epsilon, agent, i*j, saveLogs)
 					#state = fgsm_attack(state, epsilon, agent, i*j, saveLogs)
+
+				is_attack, uncertainty, confidence = check_attack(agent, state_conc)
+				saveLogs.save_uncertainty(uncertainty, run)
+
+				print('is_attack: ', is_attack)
 				
 				#1. Select and perform an action(the method rl_action is responsable to select the action to be taken)
 				action, Q_value = agent.select_action(state_conc, train=False)

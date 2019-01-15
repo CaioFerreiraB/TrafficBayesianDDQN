@@ -53,7 +53,7 @@ def fgsm_attack(data, epsilon, agent, iteration, save_logs):
 	perturbed_data = img_int.transpose((2, 0, 1))
 	perturbed_data_int = torch.from_numpy(perturbed_data).to(agent.device).unsqueeze(0)
 
-	#save_logs.save_screenshot(epsilon, iteration, img_int)
+	save_logs.save_screenshot(epsilon, iteration, img_int)
 
 	# 11. Return the perturbed data
 	return perturbed_data_int

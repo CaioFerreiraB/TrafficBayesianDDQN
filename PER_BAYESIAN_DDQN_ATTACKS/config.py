@@ -24,3 +24,7 @@ class Config(object):
     SAVE_REWARDS_FREQUENCY = 1
     AVERAGE_REWARD_FREQUENCE = 50
     EVALUATE_AMMOUNT = 2
+
+    #Attack detection
+    STOCHASTIC_PASSES = 100
+    UNCERTAINTY_TRESSHOLD = 0.1

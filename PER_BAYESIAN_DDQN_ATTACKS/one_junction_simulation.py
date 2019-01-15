@@ -111,7 +111,7 @@ def main():
 		if train:
 			info = exp.run_train_eval(runs, steps_per_run, run=i, saveLogs=save_logs, train=True, load_path=load_path)
 		else:
-			info = exp.run_eval(runs, steps_per_run, run=i, saveLogs=save_logs, train=False, attack=True, epsilon=0.002, load_path=load_path)
+			info = exp.run_eval(runs, steps_per_run, run=i, saveLogs=save_logs, train=False, attack=False, epsilon=0.01, load_path=load_path)
 		
 		performance = performance + info['performance']
 		collisions = collisions + info['collisions']
