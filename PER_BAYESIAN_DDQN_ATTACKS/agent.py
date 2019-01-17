@@ -23,9 +23,8 @@ import time
 # Project libraries
 from model import DQN
 from config import Config
-from replay_memory import ReplayMemory
-from replay_memory import Transition
 from PER import Memory
+from PER import Transition
 
 class Agent:
 	"""
@@ -42,16 +41,13 @@ class Agent:
 		self.epsilon = Config.EPS_START
 		self.episode_durations = []
 
-		print('LOAD PATH	--  agent.init:', load_path)
-
 		#2. Build networks
 		self.policy_net = DQN().to(self.device)
 		self.target_net = DQN().to(self.device)
 		
 		self.optimizer = optim.RMSprop(self.policy_net.parameters(), lr=Config.LEARNING_RATE)
 
-		if not train:
-			print('entrou no not train')		
+		if not train:		
 			self.optimizer = optim.RMSprop(self.policy_net.parameters(), lr=0)	
 			self.policy_net.load(load_path, optimizer=self.optimizer)
 			self.policy_net.eval()
@@ -73,12 +69,7 @@ class Agent:
 		done = True if next_state is None else False
 
 		# Compute Q(s_t, a) - the model computes Q(s_t), then we select the columns of actions taken
-		print(state.shape)
-		print('---------')
 		state_action_values = self.policy_net(state)
-		print(state_action_values)
-		print('state shape', state_action_values.shape)
-		print('action', action.shape)
 		state_action_values = state_action_values.gather(1, action.view(-1,1))
 
 		

@@ -19,7 +19,6 @@ import torchvision.transforms.functional as F
 
 #project libraries
 from config import Config
-from replay_memory import ReplayMemory
 from agent import Agent
 from save_logs import SaveLogs
 from adversary import *
@@ -114,7 +113,7 @@ class Experiment(SumoExperiment):
 			ret = 0
 			ret_list = []
 			vehicles = self.env.vehicles
-			collision_check = 5
+			collision_check = 0
 
 			obs = self.get_screen(self.env.reset())
 			self.env.reset_params()
@@ -341,7 +340,7 @@ class Experiment(SumoExperiment):
 			ret = 0
 			ret_list = []
 			vehicles = self.env.vehicles
-			collision_check = 5
+			collision_check = 0
 
 			obs = self.get_screen(self.env.reset())
 			self.env.reset_params()
@@ -458,40 +457,9 @@ class Experiment(SumoExperiment):
 
 		return info_dict
 
-	def run_eval(self, num_runs, num_steps, run, saveLogs, train, attack, epsilon,
+	def run_eval(self, num_runs, num_steps, run, saveLogs, attack, epsilon,
 			rl_actions=None, convert_to_csv=False, load_path=None):
-		"""
-        Run the given scenario for a set number of runs and steps per run.
-
-        Parameters
-        ----------
-            num_runs: int
-                number of runs the experiment should perform
-            num_steps: int
-                number of steps to be performs in each run of the experiment
-            train: bool
-            	Define if it is a trainning or evaluating experiment
-            run: int
-            	The number of the current experiment
-            saveLogs: SaveLogs object
-            	The instance of the package used to save the logs of the simulation
-            rl_actions: method, optional
-                maps states to actions to be performed by the RL agents (if
-                there are any)
-            convert_to_csv: bool
-                Specifies whether to convert the emission file created by sumo
-                into a csv file
-            load_path: string
-            	Path to the model that should be loaded into the neural network
-            	Default: None
-        Returns
-        -------
-            info_dict: dict
-                contains returns, average speed per step
-		if rl_actions is None:
-			def rl_actions(*_):
-				return None
-		"""
+		
 		#1. Initialize the information variables
 		info_dict = {}
 		rets = []
@@ -506,7 +474,6 @@ class Experiment(SumoExperiment):
 
 		#2. Set the reinforcement learning parameters
 		action_set = self.env.getActionSet()
-		print('LOAD PATH 	--	run:', load_path)
 		agent = Agent(action_set, train=False, load_path=load_path)
 		target_update_counter = 0
 
@@ -519,7 +486,7 @@ class Experiment(SumoExperiment):
 			ret = 0
 			ret_list = []
 			vehicles = self.env.vehicles
-			collision_check = 5
+			collision_check = 0
 
 			obs = self.get_screen(self.env.reset())
 			self.env.reset_params()
@@ -543,15 +510,12 @@ class Experiment(SumoExperiment):
 				
 				#1. Select and perform an action(the method rl_action is responsable to select the action to be taken)
 				action, Q_value = agent.select_action(state_conc, train=False)
-				#action, Q_value = agent.select_action(state, train=False)
 				print('action, Q-value:', action, Q_value)
 				if Q_value is not None: saveLogs.save_Q_value(Q_value, run)
 				obs, reward, done, _ = self.env.step(action_set[action[0]])
 
 				#2. Convert the observation to a pytorch observation
 				obs = self.get_screen(obs)
-				#state = torch.from_numpy(obs).to(agent.device).unsqueeze(0)
-				#print('state shape:', np.shape(obs))
 				reward = torch.tensor([reward], device=agent.device)
 
 				#3. Observe new state

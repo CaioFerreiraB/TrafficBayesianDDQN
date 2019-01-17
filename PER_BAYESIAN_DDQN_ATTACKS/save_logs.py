@@ -31,6 +31,7 @@ class SaveLogs:
 		self.graphs_path = self.logs_path + self.experiment_label + '/graphs'
 		self.screnshot_path = self.logs_path + self.experiment_label + '/screenshot'
 		self.uncertainty_path = self.logs_path + self.experiment_label + '/uncertainty'
+		self.loss_path = self.logs_path + self.experiment_label + '/loss'
 
 		#checkpoints
 		self.last_checkpoint_reward = 0
@@ -75,48 +76,55 @@ class SaveLogs:
 		os.makedirs(self.time_path, exist_ok=True)
 		os.makedirs(self.screnshot_path, exist_ok=True)
 		os.makedirs(self.uncertainty_path, exist_ok=True)
+		os.makedirs(self.loss_path, exist_ok=True)
 
 	def save_config_and_statistics(self):
 		file = open(self.experiment_logs_path + '/Config_&_Statistics', 'a+')
 
-		file.write('experiment: ' + self.experiment_label + '\n\n')
+		file.write('Experiment: ' + self.experiment_label + '\n')
+		file.write('--------------------------------------------\n\n')
 
-		file.write('#Network parameters\n')
-		file.write('BATH_SIZE = ' +str(Config.BATCH_SIZE)+'\n')
-		file.write('GAMMA = ' + str(Config.GAMMA) + '\n')
-		file.write('EPS_START = ' + str(Config.EPS_START) + '\n')
-		file.write('EPS_END = ' + str(Config.EPS_END) + '\n')
-		file.write('EPS_DECAY = ' + str(Config.EPS_DECAY) + '\n')
-		file.write('TARGET_UPDATE_FREQ = ' + str(Config.TARGET_UPDATE) + '\n\n')
+		file.write('## Network parameters\n')
+		file.write('	BATCH_SIZE = ' +str(Config.BATCH_SIZE)+'\n')
+		file.write('	GAMMA = ' + str(Config.GAMMA) + '\n')
+		file.write('	EPS_START = ' + str(Config.EPS_START) + '\n')
+		file.write('	EPS_END = ' + str(Config.EPS_END) + '\n')
+		file.write('	EPS_DECAY = ' + str(Config.EPS_DECAY) + '\n')
+		file.write('	TARGET_UPDATE_FREQ = ' + str(Config.TARGET_UPDATE) + '\n\n')
 
-		file.write('#Rewards/Regrets' + '\n')
-		file.write('COLLISION_REGRET = ' + str(Config.COLLISION_REGRET) + '\n')
-		file.write('ARRIVE_REWARD = ' + str(Config.ARRIVE_REWARD) + '\n')
-		file.write('TIME_PENALTY = ' + str(Config.TIME_PENALTY) + '\n\n')
+		file.write('## PER parameters\n')
+		file.write('	E = ' +str(Config.E)+'\n')
+		file.write('	A = ' +str(Config.E)+'\n')
+		file.write('	BETA = ' +str(Config.BETA)+'\n')
+		file.write('	BETA_INCREMENT = ' +str(Config.BETA_INCREMENT)+'\n\n')
 
-		file.write('#Experiment parameters' + '\n')
-		file.write('Number of experiments: ' + str(self.num_experiments) + '\n')
-		file.write('Number of runs per experiment: ' + str(self.runs_per_experiment) + '\n')
-		file.write('Total number of simulations: ' + str(self.num_simulations) + '\n\n')
+		file.write('## Attacks Detection parameters\n')
+		file.write('	STOCHASTIC_PASSES = ' +str(Config.STOCHASTIC_PASSES)+'\n\n')
+
+		file.write('## Rewards/Regrets' + '\n')
+		file.write('	COLLISION_REGRET = ' + str(Config.COLLISION_REGRET) + '\n')
+		file.write('	ARRIVE_REWARD = ' + str(Config.ARRIVE_REWARD) + '\n')
+		file.write('	TIME_PENALTY = ' + str(Config.TIME_PENALTY) + '\n\n')
+
+		file.write('## Experiment parameters' + '\n')
+		file.write('	Number of experiments: ' + str(self.num_experiments) + '\n')
+		file.write('	Number of runs per experiment: ' + str(self.runs_per_experiment) + '\n')
+		file.write('	Total number of simulations: ' + str(self.num_simulations) + '\n\n')
       	
-		file.write('#statistics' + '\n')
-		file.write('Total number of collisions: ' + str(self.num_collisions_total) + '\n')
-		file.write('Average collisions per run: ' + str(self.num_collisions_total/self.num_experiments) + '\n')
-		file.write('Total number of arrives: ' + str(self.num_arrived_total) + '\n')
-		file.write('Average arrives per run: ' + str(self.num_arrived_total/self.num_experiments) + '\n')
-		file.write('Total number of vehicles stopped: ' + str(self.num_simulations-self.num_arrived_total-self.num_collisions_total) + '\n')
-		file.write('Average stopped vehicles per run: ' + str((self.num_simulations-self.num_arrived_total-self.num_collisions_total)/self.num_experiments) + '\n')
-		file.write('Average simulation time: ' + str(self.simulation_time_total/(self.num_experiments*self.runs_per_experiment)) + '\n')
+		file.write('## Statistics' + '\n')
+		file.write('	- Collisions' + '\n')
+		file.write('		Total number of collisions: ' + str(self.num_collisions_total) + '\n')
+		file.write('		Average collisions per experiment: ' + str(self.num_collisions_total/self.num_experiments) + '\n')
+		file.write('	- Arrives' + '\n')
+		file.write('		Total number of arrives: ' + str(self.num_arrived_total) + '\n')
+		file.write('		Average arrives per experiment: ' + str(self.num_arrived_total/self.num_experiments) + '\n')
+		file.write('	- Vehicles stopped' + '\n')
+		file.write('		Total number of vehicles stopped: ' + str(self.num_simulations-self.num_arrived_total-self.num_collisions_total) + '\n')
+		file.write('		Average stopped vehicles per experiment: ' + str((self.num_simulations-self.num_arrived_total-self.num_collisions_total)/self.num_experiments) + '\n')
+		file.write('	- Time' + '\n')
+		file.write('		Average simulation time: ' + str(self.simulation_time_total/(self.num_experiments*self.runs_per_experiment)) + '\n')
 
 		file.close()
-
-	def save_reward(self, reward, experiment, current_run):
-		reward_log = open(self.rewards_path + '/experiment' + str(experiment) + '.txt', 'a+')
-
-		reward_log.write(str(reward.data.tolist()[0]) + '\n')
-
-		self.last_checkpoint_reward = current_run
-		reward_log.close()
 
 	def save_model(self, policy_net, optimizer, experiment, step):
 		path = self.model_path + '/' + self.experiment_label + str(experiment) + '.pth'
@@ -149,25 +157,34 @@ class SaveLogs:
 
 		self.average_reward_list.append(reward)
 
+	def save_reward(self, reward, experiment, current_run):
+		reward_log = open(self.rewards_path + '/experiment' + str(experiment) + '.txt', 'a+')
+		reward_log.write(str(reward.data.tolist()[0]) + '\n')
+		reward_log.close()
+
 	def save_collision(self, collision, experiment):
 		reward_log = open(self.collisions_path + '/experiment' + str(experiment) + '.txt', 'a+')
-
 		reward_log.write(str(collision) + '\n')
-
 		reward_log.close()
 
 	def save_Q_value(self, value, experiment):
 		reward_log = open(self.Q_value_path + '/experiment' + str(experiment) + '.txt', 'a+')
-
 		reward_log.write(str(value[0].data.tolist()[0]) + '\n')
-
 		reward_log.close()
 
 	def save_time(self, time, experiment):
 		reward_log = open(self.time_path + '/experiment' + str(experiment) + '.txt', 'a+')
-
 		reward_log.write(str(time) + '\n')
+		reward_log.close()
+	
+	def save_uncertainty(self, uncertainty, experiment):
+		reward_log = open(self.uncertainty_path + '/experiment' + str(experiment) + '.txt', 'a+')
+		reward_log.write(str(uncertainty) + '\n')
+		reward_log.close()
 
+	def save_loss(self, loss, experiment):
+		reward_log = open(self.loss_path + '/experiment' + str(experiment) + '.txt', 'a+')
+		reward_log.write(str(loss.item()) + '\n')
 		reward_log.close()
 
 	def save_screenshot(self, epsilon, iteration, img):
@@ -177,10 +194,3 @@ class SaveLogs:
 		print('entrou no screenshot')
 		#io.imsave(self.screnshot_path + '/' + str(epsilon) + '_' + str(iteration) + '.png', img)
 		io.imsave(os.getcwd() + "/attack.png", img)
-
-	def save_uncertainty(self, uncertainty, experiment):
-		reward_log = open(self.uncertainty_path + '/experiment' + str(experiment) + '.txt', 'a+')
-
-		reward_log.write(str(uncertainty) + '\n')
-
-		reward_log.close()
