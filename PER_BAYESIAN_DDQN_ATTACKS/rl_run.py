@@ -88,6 +88,8 @@ class Experiment(SumoExperiment):
 
 		performance = []
 		collisions = []
+		q_values = []
+		losses = []
 
 		#2. Set the reinforcement learning parameters
 		action_set = self.env.getActionSet()
@@ -133,10 +135,14 @@ class Experiment(SumoExperiment):
 					agent.policy_net.train()
 					train = True
 
-				action, Q_value = agent.select_action(self.concatenate(state, agent), train)
-				#action, Q_value = agent.select_action(state, train)
-				if Q_value is not None and train: saveLogs.save_Q_value(Q_value, run)
-				obs, reward, done, _ = self.env.step(action_set[action[0]])
+				action, Q_value, uncertainty = agent.select_action(self.concatenate(state, agent), train)
+
+				if Q_value is not None and train: 
+					saveLogs.save_Q_value(Q_value, run)
+					q_values.append(Q_value)
+					saveLogs.save_uncertainty(uncertainty, run)	
+
+				obs, reward, done, _ = self.env.step(action_set[action])
 
 				#2. Convert the observation to a pytorch observation
 				obs = self.get_screen(obs)
@@ -170,7 +176,10 @@ class Experiment(SumoExperiment):
 				#7. Perform one step of the optimization (on the target network) if in training mode
 				if train and evaluate_counter == Config.EVALUATE_AMMOUNT:
 					print('-----ENTROU NA OTIMIZACAO')
-					agent.optimize_model()
+					loss = agent.optimize_model()
+					saveLogs.save_loss(loss, run)
+					losses.append(loss)
+
 					agent.policy_net.eval()
 					train = False
 					target_update_counter += 1
@@ -254,6 +263,8 @@ class Experiment(SumoExperiment):
 		info_dict["per_step_returns"] = ret_lists
 		info_dict["performance"] = np.array(performance.copy())
 		info_dict["collisions"] = np.array(collisions.copy())
+		info_dict["loss"] = np.array(losses.copy())
+		info_dict["q_values"] = np.array(q_values.copy())
 
 		print("Average, std return: {}, {}".format(
 			np.mean(rets), np.std(rets)))
@@ -320,6 +331,8 @@ class Experiment(SumoExperiment):
 
 		performance = []
 		collisions = []
+		q_values = []
+		losses = []
 
 		#2. Set the reinforcement learning parameters
 		action_set = self.env.getActionSet()
@@ -351,9 +364,13 @@ class Experiment(SumoExperiment):
 				print('(episode, step) = ', i, ',', j)
 				
 				#1. Select and perform an action(the method rl_action is responsable to select the action to be taken)
-				action, Q_value = agent.select_action(self.concatenate(state, agent), train)
-				if Q_value is not None: saveLogs.save_Q_value(Q_value, run)
-				obs, reward, done, _ = self.env.step(action_set[action[0]])
+				action, Q_value, uncertainty = agent.select_action(self.concatenate(state, agent), train)
+				if Q_value is not None: 
+					saveLogs.save_Q_value(Q_value, run)
+					q_values.append(Q_value)
+					saveLogs.save_uncertainty(uncertainty, run)
+
+				obs, reward, done, _ = self.env.step(action_set[action])
 
 				#2. Convert the observation to a pytorch observation
 				obs = self.get_screen(obs)
@@ -381,7 +398,9 @@ class Experiment(SumoExperiment):
 				ret_list.append(reward)
 
 				#7. Perform one step of the optimization (on the target network) if in training mode
-				agent.optimize_model()	
+				loss = agent.optimize_model()	
+				saveLogs.save_loss(loss, run)
+				losses.append(loss)
 
 				target_update_counter += 1
 
@@ -436,6 +455,8 @@ class Experiment(SumoExperiment):
 		info_dict["per_step_returns"] = ret_lists
 		info_dict["performance"] = np.array(performance.copy())
 		info_dict["collisions"] = np.array(collisions.copy())
+		info_dict["loss"] = np.array(losses.copy())
+		info_dict["q_values"] = np.array(q_values.copy())
 
 		print("Average, std return: {}, {}".format(
 			np.mean(rets), np.std(rets)))
@@ -471,6 +492,8 @@ class Experiment(SumoExperiment):
 
 		performance = []
 		collisions = []
+		losses = []
+		q_values = []
 
 		#2. Set the reinforcement learning parameters
 		action_set = self.env.getActionSet()
@@ -511,8 +534,10 @@ class Experiment(SumoExperiment):
 				#1. Select and perform an action(the method rl_action is responsable to select the action to be taken)
 				action, Q_value = agent.select_action(state_conc, train=False)
 				print('action, Q-value:', action, Q_value)
-				if Q_value is not None: saveLogs.save_Q_value(Q_value, run)
-				obs, reward, done, _ = self.env.step(action_set[action[0]])
+				if Q_value is not None: 
+					saveLogs.save_Q_value(Q_value, run)
+					q_values.append(Q_value)
+				obs, reward, done, _ = self.env.step(action_set[action])
 
 				#2. Convert the observation to a pytorch observation
 				obs = self.get_screen(obs)
@@ -583,6 +608,8 @@ class Experiment(SumoExperiment):
 		info_dict["per_step_returns"] = ret_lists
 		info_dict["performance"] = np.array(performance.copy())
 		info_dict["collisions"] = np.array(collisions.copy())
+		info_dict["loss"] = None
+		info_dict["q_values"] = np.array(collisions.copy())
 
 		print("Average, std return: {}, {}".format(
 			np.mean(rets), np.std(rets)))

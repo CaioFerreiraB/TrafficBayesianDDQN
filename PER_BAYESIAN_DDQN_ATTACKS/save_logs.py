@@ -131,10 +131,14 @@ class SaveLogs:
 
 		policy_net.save(path, step=step, optimizer=optimizer)
 
-	def save_graph(self, experiment_label, label, performance, collisions, rewards):
+	def save_graph(self, experiment_label, label, performance, collisions, rewards, loss, q_values):
 		plot.plot_one_axis(self.graphs_path + '/', performance, 'simulation time', experiment_label, label)
 		plot.plot_one_axis(self.graphs_path + '/', collisions, 'collisions', experiment_label, label)
 		plot.plot_one_axis(self.graphs_path + '/', rewards, 'total reward', experiment_label, label)
+		if loss is not None:
+			plot.plot_one_axis(self.graphs_path + '/', loss, 'loss', experiment_label, label)
+		if q_values is not None:
+			plot.plot_one_axis(self.graphs_path + '/', q_values, 'q_value', experiment_label, label)
 
 	def add_crash(self):
 		self.num_collisions_total += 1
@@ -169,7 +173,7 @@ class SaveLogs:
 
 	def save_Q_value(self, value, experiment):
 		reward_log = open(self.Q_value_path + '/experiment' + str(experiment) + '.txt', 'a+')
-		reward_log.write(str(value[0].data.tolist()[0]) + '\n')
+		reward_log.write(str(value) + '\n')
 		reward_log.close()
 
 	def save_time(self, time, experiment):
@@ -183,9 +187,10 @@ class SaveLogs:
 		reward_log.close()
 
 	def save_loss(self, loss, experiment):
-		reward_log = open(self.loss_path + '/experiment' + str(experiment) + '.txt', 'a+')
-		reward_log.write(str(loss.item()) + '\n')
-		reward_log.close()
+		if loss is not None:
+			reward_log = open(self.loss_path + '/experiment' + str(experiment) + '.txt', 'a+')
+			reward_log.write(str(loss) + '\n')
+			reward_log.close()
 
 	def save_screenshot(self, epsilon, iteration, img):
 		print('epsilon:', epsilon)

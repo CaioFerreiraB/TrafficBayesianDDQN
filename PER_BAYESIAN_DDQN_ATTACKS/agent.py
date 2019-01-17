@@ -123,12 +123,29 @@ class Agent:
 			# select an action from the neural network
 			with torch.no_grad():
 				# a <- argmax Q(s, theta)
-				a = self.policy_net(state)
-				return a.max(1)[1].view(1, 1), a.max(0)
+				#set the network to train mode is important to enable dropout
+				self.policy_net.train()
+				output_list = []
+				# Retrieve the outputs from neural network feedfoward n times to build a statistic model
+				for i in range(Config.STOCHASTIC_PASSES):
+					#print(agent.policy_net(data))
+					output_list.append(torch.unsqueeze(F.softmax(self.policy_net(state)), 0))
+					#print(output_list[i])
+
+				self.policy_net.eval()
+				# The result of the network is the mean of n passes
+				output_mean = torch.cat(output_list, 0).mean(0)
+				q_value = output_mean.data.cpu().numpy().max()
+				action = output_mean.max(1)[1].view(1, 1)
+
+				uncertainty = torch.cat(output_list, 0).var(0).mean().item()
+				
+				return action, q_value, uncertainty
+				
 		else:
 			# select a random action
 			print('random action')
-			return torch.tensor([[random.randrange(2)]], device=self.device, dtype=torch.long), None
+			return torch.tensor([[random.randrange(2)]], device=self.device, dtype=torch.long), None, None
 
 	def optimize_model(self):
 		"""
@@ -177,13 +194,16 @@ class Agent:
 
 		# Compute Huber loss
 		loss = F.smooth_l1_loss(state_action_values, expected_state_action_values.unsqueeze(1))
-		
+		loss_return = loss.item()
+
 		# Optimize the model
 		self.optimizer.zero_grad()
 		loss.backward()
 		for param in self.policy_net.parameters():
 			param.grad.data.clamp_(-1, 1)
 		self.optimizer.step()
+
+		return loss_return
 
 	def save(self, step, logs_path, label):
 		"""

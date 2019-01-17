@@ -27,6 +27,10 @@ def parse_args():
 						default=None, type=str)
 	parser.add_argument('-t', '--train', dest='train', help='train policy or not', choices=['True', 'False'],
 						default='True', type=str)
+	parser.add_argument('-m', '--mode', dest='mode', help='simulation mode.', choices=['t', 'e', 'te'],
+						default='te', type=str)
+	parser.add_argument('-a', '--attack', dest='attack', help='Attack or not the images.', choices=['True', 'False'],
+						default='False', type=str)
 	args = parser.parse_args()
 	return args
 
@@ -34,13 +38,19 @@ def main():
 	#0. Set initial variables
 	label = args.label
 	load_path = args.load_path
+	mode = args.mode
 	if args.train == 'True':
 		train = True
 	else:
 		train = False
 
+	if args.attack == 'True':
+		attack = True
+	else:
+		attack = False
+
 	experiments = 2
-	runs = 5000
+	runs = 3000
 	steps_per_run = 250
 
 	#1. Set the logs object, creating the logs paths, if it does not exists yet, and the experiments logs path
@@ -52,6 +62,8 @@ def main():
 	performance = np.zeros(runs)
 	collisions = np.zeros(runs)
 	rewards = np.zeros(runs)
+	q_values = np.zeros(runs)
+	loss = np.zeros(runs)
 
 	#3. Run a set number of experiments
 	for i in range (experiments):
@@ -104,16 +116,18 @@ def main():
 		exp = Experiment(env, scenario)
 
 		#7. Run the sumo simulation for a set number of runs and time steps per run
-		if train:
+		if mode == 'te':
 			info = exp.run_train_eval(runs, steps_per_run, run=i, saveLogs=save_logs, train=True, load_path=load_path)
-		else:
-			info = exp.run_eval(runs, steps_per_run, run=i, saveLogs=save_logs, train=False, attack=False, epsilon=0.01, load_path=load_path)
+		elif mode == 't':
+			info = exp.run_train(runs, steps_per_run, run=i, saveLogs=save_logs, train=True, load_path=load_path)
+		elif mode == 'e':
+			info = exp.run_eval(runs, steps_per_run, run=i, saveLogs=save_logs, train=False, attack=attack, epsilon=0.01, load_path=load_path)
 		
 		performance = performance + info['performance']
 		collisions = collisions + info['collisions']
 		rewards = rewards + info['returns']
 
-		save_logs.save_graph(label, 'exp' + str(i), performance, collisions, rewards)
+		save_logs.save_graph(label, 'exp' + str(i), info['performance'], info['collisions'], info['returns'], info['loss'], info['q_values'] )
 
 	#4. Average the total performance of the experiments
 	performance = performance/experiments
@@ -124,7 +138,7 @@ def main():
 	save_logs.save_config_and_statistics()
 
 	#6. Save the graphs produced
-	save_logs.save_graph(label, 'final', performance, collisions, rewards)
+	save_logs.save_graph(label, 'final', performance, collisions, rewards, None, None)
 	
 
 
