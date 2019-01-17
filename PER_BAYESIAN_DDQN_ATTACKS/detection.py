@@ -17,6 +17,7 @@ def calculate_uncertainty(agent, data):
 	
 	output_list = []
 
+	#Its important to set the network to train mode in order to activate dropout
 	agent.policy_net.train()
 
 	#0. Retrieve the outputs from neural network feedfoward n times to build a statistic model

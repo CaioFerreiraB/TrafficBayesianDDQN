@@ -92,7 +92,6 @@ class Experiment(SumoExperiment):
 
 		#2. Set the reinforcement learning parameters
 		action_set = self.env.getActionSet()
-		print('LOAD PATH 	--	run:', load_path)
 		agent = Agent(action_set, train=True, load_path=load_path)
 		target_update_counter = 0
 

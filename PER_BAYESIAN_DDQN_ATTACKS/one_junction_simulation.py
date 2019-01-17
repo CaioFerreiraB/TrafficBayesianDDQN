@@ -21,26 +21,23 @@ import time
 
 def parse_args():
 	parser = argparse.ArgumentParser()
-	parser.add_argument('-ml', '--model_logs_path', dest='model_logs_path', help='path of the model checkpoint folder',
-						default='./logs/model/', type=str)
-	parser.add_argument('-rl', '--rewards_logs_path', dest='rewards_logs_path', help='path of the reward checkpoint folder',
-						default='./logs/rewards/', type=str)
 	parser.add_argument('-la', '--label', dest='label', help='experiment label',
 						default='experiment', type=str)
 	parser.add_argument('-lp', '--load_path', dest='load_path', help='path to the model to be loaded',
 						default=None, type=str)
-	parser.add_argument('-t', '--train', dest='train', help='train policy or not',
-						default=True, type=bool)
+	parser.add_argument('-t', '--train', dest='train', help='train policy or not', choices=['True', 'False'],
+						default='True', type=str)
 	args = parser.parse_args()
 	return args
 
 def main():
-	model_logs_path = args.model_logs_path
-	rewards_logs_path = args.rewards_logs_path
+	#0. Set initial variables
 	label = args.label
 	load_path = args.load_path
-	print('LOAD PATH 	--	main:', load_path)
-	train = False
+	if args.train == 'True':
+		train = True
+	else:
+		train = False
 
 	experiments = 2
 	runs = 5000
@@ -48,7 +45,6 @@ def main():
 
 	#1. Set the logs object, creating the logs paths, if it does not exists yet, and the experiments logs path
 	save_logs = SaveLogs(label, experiments, runs, steps_per_run)
-
 	save_logs.create_logs_path()
 	save_logs.create_experiments_logs_path()
 
@@ -83,7 +79,7 @@ def main():
 		#2. Initite the parameters for a sumo simulation and the initial configurations of the simulation
 		sumo_params = SumoParams(sim_step=0.5, render=True)
 
-		edges_distribution = ['bottom', 'right'] #set the vehicles to just star on the bottom and right edges
+		edges_distribution = ['bottom', 'right'] #set the vehicles to just start on the bottom and right edges
 		initial_config = InitialConfig(edges_distribution=edges_distribution, spacing='custom')
 
 
