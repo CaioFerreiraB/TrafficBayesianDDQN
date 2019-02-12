@@ -91,7 +91,6 @@ class Agent:
 
 		self.memory.add(error, state, action, next_state, reward)
 
-
 	def select_action(self, state, train=True):
 		"""
 		Selet the best action according to the Q-values outputed from the neural network
@@ -109,6 +108,45 @@ class Agent:
 			a.max(0): float
 				The Q-value of the action taken
 		"""
+		global steps_done
+		sample = random.random()
+		#1. Perform a epsilon-greedy algorithm
+		#a. set the value for epsilon
+		self.epsilon = Config.EPS_END + (Config.EPS_START - Config.EPS_END) * \
+			math.exp(-1. * self.steps_done / Config.EPS_DECAY)
+			
+		self.steps_done += 1
+
+		#b. make the decision for selecting a random action or selecting an action from the neural network
+		if sample > self.epsilon or (not train):
+			# select an action from the neural network
+			with torch.no_grad():
+				# a <- argmax Q(s, theta)
+				a = self.policy_net(state)
+				return a.max(1)[1].view(1, 1), a.max(0)
+		else:
+			# select a random action
+			print('random action')
+			return torch.tensor([[random.randrange(2)]], device=self.device, dtype=torch.long), None
+
+	"""
+	def select_action(self, state, train=True):
+		
+		Selet the best action according to the Q-values outputed from the neural network
+
+		Parameters
+		----------
+			state: float ndarray
+				The current state on the simulation
+			train: bool
+				Define if we are evaluating or trainning the model
+		Returns
+		-------
+			a.max(1)[1]: int
+				The action with the highest Q-value
+			a.max(0): float
+				The Q-value of the action taken
+		
 		global steps_done
 		sample = random.random()
 		#1. Perform a epsilon-greedy algorithm
@@ -147,6 +185,7 @@ class Agent:
 			print('random action')
 			return torch.tensor([[random.randrange(2)]], device=self.device, dtype=torch.long), None, None
 
+	"""
 	def optimize_model(self):
 		"""
 		Perform one step of optimization on the neural network

@@ -514,6 +514,7 @@ class Experiment(SumoExperiment):
 			obs = self.get_screen(self.env.reset())
 			self.env.reset_params()
 			state = np.stack([obs for _ in range(4)], axis=0)
+			time.sleep(5)
 
 			#2. Perform one simulation
 			for j in range(num_steps):
@@ -532,12 +533,17 @@ class Experiment(SumoExperiment):
 				print('is_attack: ', is_attack)
 				
 				#1. Select and perform an action(the method rl_action is responsable to select the action to be taken)
+				#action, Q_value, uncertainty = agent.select_action(state_conc, train=False)
 				action, Q_value = agent.select_action(state_conc, train=False)
 				print('action, Q-value:', action, Q_value)
 				if Q_value is not None: 
 					saveLogs.save_Q_value(Q_value, run)
 					q_values.append(Q_value)
 				obs, reward, done, _ = self.env.step(action_set[action])
+
+	
+				sc_name2 = os.getcwd() + "/image_simulation/screenshot" + str(i*j) + ".png"
+				self.env.traci_connection.gui.screenshot("View #0", sc_name2) 
 
 				#2. Convert the observation to a pytorch observation
 				obs = self.get_screen(obs)

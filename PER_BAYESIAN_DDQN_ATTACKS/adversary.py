@@ -54,6 +54,7 @@ def fgsm_attack(data, epsilon, agent, iteration, save_logs):
 	perturbed_data_int = torch.from_numpy(perturbed_data).to(agent.device).unsqueeze(0)
 
 	save_logs.save_screenshot(epsilon, iteration, img_int)
+	io.imsave(os.getcwd() + "/images_attack/attack" + str(iteration) + ".png", img_int)
 
 	# 11. Return the perturbed data
 	return perturbed_data_int

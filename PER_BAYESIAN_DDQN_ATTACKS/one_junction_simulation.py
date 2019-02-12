@@ -121,7 +121,7 @@ def main():
 		elif mode == 't':
 			info = exp.run_train(runs, steps_per_run, run=i, saveLogs=save_logs, train=True, load_path=load_path)
 		elif mode == 'e':
-			info = exp.run_eval(runs, steps_per_run, run=i, saveLogs=save_logs, train=False, attack=attack, epsilon=0.01, load_path=load_path)
+			info = exp.run_eval(runs, steps_per_run, run=i, saveLogs=save_logs, attack=attack, epsilon=0.3, load_path=load_path)
 		
 		performance = performance + info['performance']
 		collisions = collisions + info['collisions']
