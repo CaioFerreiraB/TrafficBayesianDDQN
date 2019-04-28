@@ -12,6 +12,8 @@ from skimage import img_as_ubyte, img_as_float
 import os, time
 from config import Config
 
+#from save_logs import SaveLogs
+
 
 def calculate_uncertainty(agent, data):
 	
@@ -45,9 +47,26 @@ def check_attack(agent, data):
 	print('confidence:', confidence)
 
 	#1. Decide if it's happening or not an attack
-	if uncertainty > Config.UNCERTAINTY_TRESSHOLD:
+	if uncertainty < Config.UNCERTAINTY_TRESSHOLD:
 		return True, uncertainty, confidence
 	else:
 		return False, uncertainty, confidence
 
+def detection_information(attack, detection, SaveLogs):
+	if attack: 
+		SaveLogs.attacks += 1
 
+	if detection:	
+		SaveLogs.attacks_detection += 1
+	
+	if attack and detection:
+		SaveLogs.true_positives += 1
+	elif attack and not detection:
+		SaveLogs.false_negatives += 1
+	elif not attack and detection:
+		SaveLogs.false_positives += 1
+	elif not attack and not detection:
+		SaveLogs.true_negatives += 1
+
+
+		

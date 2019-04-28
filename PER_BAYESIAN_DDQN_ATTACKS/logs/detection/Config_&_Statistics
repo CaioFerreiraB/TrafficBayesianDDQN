@@ -1,0 +1,42 @@
+Experiment: detection
+--------------------------------------------
+
+## Network parameters
+	BATCH_SIZE = 64
+	GAMMA = 0.99
+	EPS_START = 0.9
+	EPS_END = 0.05
+	EPS_DECAY = 200
+	TARGET_UPDATE_FREQ = 10000
+
+## PER parameters
+	E = 0.01
+	A = 0.01
+	BETA = 0.3
+	BETA_INCREMENT = 1e-05
+
+## Attacks Detection parameters
+	STOCHASTIC_PASSES = 100
+
+## Rewards/Regrets
+	COLLISION_REGRET = -100.0
+	ARRIVE_REWARD = 50.0
+	TIME_PENALTY = -0.001
+
+## Experiment parameters
+	Number of experiments: 2
+	Number of runs per experiment: 3000
+	Total number of simulations: 6000
+
+## Statistics
+	- Collisions
+		Total number of collisions: 4210
+		Average collisions per experiment: 2105.0
+	- Arrives
+		Total number of arrives: 1790
+		Average arrives per experiment: 895.0
+	- Vehicles stopped
+		Total number of vehicles stopped: 0
+		Average stopped vehicles per experiment: 0.0
+	- Time
+		Average simulation time: 28.771166666666666

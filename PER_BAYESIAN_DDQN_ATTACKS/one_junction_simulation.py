@@ -14,6 +14,7 @@ from crash import OneJuntionCrashEnv, ADDITIONAL_ENV_PARAMS #environment
 from rl_run import Experiment
 from plots import plot
 from save_logs import SaveLogs
+from config import Config
 
 import os
 import argparse
@@ -121,7 +122,7 @@ def main():
 		elif mode == 't':
 			info = exp.run_train(runs, steps_per_run, run=i, saveLogs=save_logs, train=True, load_path=load_path)
 		elif mode == 'e':
-			info = exp.run_eval(runs, steps_per_run, run=i, saveLogs=save_logs, attack=attack, epsilon=0.3, load_path=load_path)
+			info = exp.run_eval(runs, steps_per_run, run=i, saveLogs=save_logs, attack=attack, epsilon=Config.EPSILON_ATTACK, load_path=load_path)
 		
 		performance = performance + info['performance']
 		collisions = collisions + info['collisions']
@@ -136,6 +137,7 @@ def main():
 
 	#5. Store all the statitics of the simulation
 	save_logs.save_config_and_statistics()
+	save_logs.save_detection_informations()
 
 	#6. Save the graphs produced
 	save_logs.save_graph(label, 'final', performance, collisions, rewards, None, None)

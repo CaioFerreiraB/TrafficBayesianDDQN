@@ -19,6 +19,14 @@ class SaveLogs:
 		self.num_arrived_total = 0
 		self.simulation_time_total = 0
 
+		#attack_detection
+		self.attacks = 0
+		self.attacks_detection = 0
+		self.false_positives = 0
+		self.true_positives = 0
+		self.false_negatives = 0
+		self.true_negatives = 0
+
 		#paths
 		self.logs_path = logs_path
 		self.experiment_label = experiment_label
@@ -99,7 +107,9 @@ class SaveLogs:
 		file.write('	BETA_INCREMENT = ' +str(Config.BETA_INCREMENT)+'\n\n')
 
 		file.write('## Attacks Detection parameters\n')
-		file.write('	STOCHASTIC_PASSES = ' +str(Config.STOCHASTIC_PASSES)+'\n\n')
+		file.write('	STOCHASTIC_PASSES = ' +str(Config.STOCHASTIC_PASSES)+'\n')
+		file.write('	UNCERTAINTY_TRESSHOLD = ' +str(Config.UNCERTAINTY_TRESSHOLD)+'\n')
+		file.write('	EPSILON_ATTACK = ' +str(Config.EPSILON_ATTACK)+'\n\n')
 
 		file.write('## Rewards/Regrets' + '\n')
 		file.write('	COLLISION_REGRET = ' + str(Config.COLLISION_REGRET) + '\n')
@@ -186,6 +196,16 @@ class SaveLogs:
 		reward_log.write(str(uncertainty) + '\n')
 		reward_log.close()
 
+	def save_uncertainty_attack(self, uncertainty, experiment):
+		reward_log = open(self.uncertainty_path + '/attack_experiment' + str(experiment) + '.txt', 'a+')
+		reward_log.write(str(uncertainty) + '\n')
+		reward_log.close()
+
+	def save_uncertainty_no_attack(self, uncertainty, experiment):
+		reward_log = open(self.uncertainty_path + '/no_attack_experiment' + str(experiment) + '.txt', 'a+')
+		reward_log.write(str(uncertainty) + '\n')
+		reward_log.close()
+
 	def save_loss(self, loss, experiment):
 		if loss is not None:
 			reward_log = open(self.loss_path + '/experiment' + str(experiment) + '.txt', 'a+')
@@ -193,9 +213,20 @@ class SaveLogs:
 			reward_log.close()
 
 	def save_screenshot(self, epsilon, iteration, img):
-		print('epsilon:', epsilon)
-		print('iteration:', iteration)
-		print('img.shape:', img.shape)
-		print('entrou no screenshot')
+		"""print('epsilon:', epsilon)
+								print('iteration:', iteration)
+								print('img.shape:', img.shape)
+								print('entrou no screenshot')"""
 		#io.imsave(self.screnshot_path + '/' + str(epsilon) + '_' + str(iteration) + '.png', img)
 		io.imsave(os.getcwd() + "/attack.png", img)
+
+	def save_detection_informations(self):
+		file = open(self.experiment_logs_path + '/detection_statistics', 'a+')
+
+		file.write(str(self.attacks)+'\n')
+		file.write(str(self.attacks_detection)+'\n')
+		file.write(str(self.false_positives)+'\n')
+		file.write(str(self.true_positives)+'\n')
+		file.write(str(self.false_negatives)+'\n')
+		file.write(str(self.true_negatives)+'\n')
+

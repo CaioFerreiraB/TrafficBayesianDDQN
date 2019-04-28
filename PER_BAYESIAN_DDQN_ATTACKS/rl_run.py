@@ -1,6 +1,7 @@
 import logging
 import datetime
 import numpy as np
+import random
 
 #flow libraries
 from flow.core.util import emission_to_csv
@@ -364,11 +365,11 @@ class Experiment(SumoExperiment):
 				print('(episode, step) = ', i, ',', j)
 				
 				#1. Select and perform an action(the method rl_action is responsable to select the action to be taken)
-				action, Q_value, uncertainty = agent.select_action(self.concatenate(state, agent), train)
+				action, Q_value = agent.select_action(self.concatenate(state, agent), train)
 				if Q_value is not None: 
 					saveLogs.save_Q_value(Q_value, run)
 					q_values.append(Q_value)
-					saveLogs.save_uncertainty(uncertainty, run)
+					#saveLogs.save_uncertainty(uncertainty, run)
 
 				obs, reward, done, _ = self.env.step(action_set[action])
 
@@ -439,7 +440,8 @@ class Experiment(SumoExperiment):
 			
 			#6. save rewards
 			#if i % Config.SAVE_REWARDS_FREQUENCy == 0:
-			saveLogs.save_reward(rets, run, i)
+			for rewa in rets:
+				saveLogs.save_reward(rewa, run, i)
 			saveLogs.save_average_reward(ret)
 			saveLogs.save_collision(collision_check, run)
 			saveLogs.save_time(j, run)
@@ -495,6 +497,9 @@ class Experiment(SumoExperiment):
 		losses = []
 		q_values = []
 
+		attack_number = 0
+		attack_dettected = 0
+
 		#2. Set the reinforcement learning parameters
 		action_set = self.env.getActionSet()
 		agent = Agent(action_set, train=False, load_path=load_path)
@@ -514,7 +519,6 @@ class Experiment(SumoExperiment):
 			obs = self.get_screen(self.env.reset())
 			self.env.reset_params()
 			state = np.stack([obs for _ in range(4)], axis=0)
-			time.sleep(5)
 
 			#2. Perform one simulation
 			for j in range(num_steps):
@@ -523,14 +527,29 @@ class Experiment(SumoExperiment):
 				state_conc = self.concatenate(state, agent)
 
 				#0.Attack the images
+				is_attack = False
 				if attack:
-					state_conc = fgsm_attack(state_conc, epsilon, agent, i*j, saveLogs)
-					#state = fgsm_attack(state, epsilon, agent, i*j, saveLogs)
+					random.seed()
+					random_number = random.random()
+					is_attack = False
 
-				is_attack, uncertainty, confidence = check_attack(agent, state_conc)
+					if random_number < Config.ATTACK_PROBABILITY:
+						is_attack = True
+						state_conc = fgsm_attack(state_conc, epsilon, agent, i*j, saveLogs)
+						#state = fgsm_attack(state, epsilon, agent, i*j, saveLogs)
+
+				detected, uncertainty, confidence = check_attack(agent, state_conc)
+
+				if is_attack:
+					saveLogs.save_uncertainty_attack(uncertainty, run)
+				else:
+					saveLogs.save_uncertainty_no_attack(uncertainty, run)
+
+				detection_information(attack, detected, saveLogs)
+
 				saveLogs.save_uncertainty(uncertainty, run)
 
-				print('is_attack: ', is_attack)
+				print('detected: ', detected)
 				
 				#1. Select and perform an action(the method rl_action is responsable to select the action to be taken)
 				#action, Q_value, uncertainty = agent.select_action(state_conc, train=False)
